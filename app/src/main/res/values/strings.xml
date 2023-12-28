@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Sudoku</string>
+    <string name="difficulty_easy">Easy</string>
+    <string name="difficulty_moderate">Moderate</string>
+    <string name="difficulty_hard">Hard</string>
+    <string name="difficulty_unspecified">Unspecified</string>
+    <string name="mistakes_number_out_of">Mistakes %1$d/%2$d\n</string>
+</resources>
