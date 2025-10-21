@@ -4,6 +4,10 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,54 +27,65 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.layout.VerticalAlignmentLine
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.game.sudoku.R
+import com.game.sudoku.core.PreferencesConstants
 import com.game.sudoku.ui.core.Cell
-import com.game.sudoku.ui.data.core.PreferencesConstants
 import com.game.sudoku.ui.game.components.GameMenu
-import com.game.sudoku.ui.game.components.board.Board
+import com.game.sudoku.ui.game.components.board.GameBoard
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
-@Composable
+@Destination<RootGraph>
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun GameScreen(
     viewModel: GameViewModel = hiltViewModel(),
     navigator: DestinationsNavigator
 ) {
-
     val localView = LocalView.current // for vibration
     var restartButtonAngleState by remember { mutableFloatStateOf(0f) };
     val restartButtonAnimation: Float by animateFloatAsState(
         targetValue = restartButtonAngleState,
         animationSpec = tween(durationMillis = 250), label = "restartButtonAnimation"
     )
-//
+
     val mistakeLimit by viewModel.mistakeLimit.collectAsStateWithLifecycle(
         initialValue = PreferencesConstants.DEFAULT_MISTAKES_LIMIT
     )
     val errorHighlight by viewModel.mistakesMethod.collectAsStateWithLifecycle(
         initialValue = PreferencesConstants.DEFAULT_HIGHLIGHT_MISTAKES
     )
+
+    val remainingUse by viewModel.remainingUse.collectAsStateWithLifecycle(initialValue = false)
+    val highlightIdentical by viewModel.identicalHighlight.collectAsStateWithLifecycle(
+        initialValue = true
+    )
+    val boardScale by animateFloatAsState(
+        targetValue = if (viewModel.gamePlaying || viewModel.endGame) 1f else 0.90f,
+        label = "Game board scale"
+    )
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { },
                 navigationIcon = {
-                    IconButton(onClick = { navigator.popBackStack() }) {
+                    IconButton(
+                        onClick = { navigator.popBackStack() }
+                    ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_round_arrow_back_24),
                             contentDescription = null
@@ -79,18 +93,14 @@ fun GameScreen(
                     }
                 },
                 actions = {
-                    // probably for the case when game is paused
+//                     probably for the case when game is paused
                     AnimatedVisibility(visible = !viewModel.endGame) {
                         val rotationAngle by animateFloatAsState(
                             targetValue = 360f,
                             label = "Play/Pause game icon rotation"
                         )
                         IconButton(onClick = {
-                            if (!viewModel.gamePlaying) {
-                               viewModel.startTimer()
-                            } else {
-                                viewModel.pauseTimer()
-                            }
+                            if (!viewModel.gamePlaying) viewModel.startTimer() else viewModel.pauseTimer()
                             viewModel.curCell = Cell(-1, -1, 0)
                         }) {
                             Icon(
@@ -139,7 +149,7 @@ fun GameScreen(
                            },
                            onExportClicked = {}
                        )
-                   } 
+                   }
                 }
             )
         }
@@ -169,12 +179,12 @@ fun GameScreen(
                             )
                         )
                     }
-                    val timerEnabled by viewModel.timerEnabled.collectAsStateWithLifecycle(
-                        initialValue = PreferencesConstants.DEFAULT_SHOW_TIMER
-                    )
+//                    val timerEnabled by viewModel.timerEnabled.collectAsStateWithLifecycle(
+//                        initialValue = PreferencesConstants.DEFAULT_SHOW_TIMER
+//                    )
+                    val timerEnabled = true
                     AnimatedVisibility(visible = timerEnabled || viewModel.endGame) {
                         TopBoardSection(viewModel.timeText)
-                        
                     }
                 }
             }
@@ -188,9 +198,9 @@ fun GameScreen(
                     modifier = Modifier.align(Alignment.Center)
                 ) {
                     AnimatedVisibility(
-                        visible = !viewModel.gamePlaying && !viewModel.endGame
-                        // enter
-                        // exit
+                        visible = !viewModel.gamePlaying && !viewModel.endGame,
+                        enter = expandVertically(clip = false) + fadeIn(),
+                        exit = shrinkVertically(clip = false) + fadeOut()
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.PlayArrow,
@@ -201,14 +211,10 @@ fun GameScreen(
                         )
                     }
                 }
-                Board(
+                GameBoard(
                     modifier = Modifier
-                        .blur(boardBlur)
                         .scale(boardScale, boardScale),
-                    board = if (!viewModel.showSolution) viewModel.gameBoard else viewModel.solvedBoard,
-                    size = viewModel.size,
-                    mainTextSize = fontSizeValue,
-                    autoFontSize = fontSizeFactor == 0,
+                    board = viewModel.gameBoard,
                     notes = viewModel.notes,
                     selectedCell = viewModel.curCell,
                     onClick = { cell ->
@@ -219,7 +225,8 @@ fun GameScreen(
                         if (!viewModel.gamePlaying) {
                             localView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                             viewModel.startTimer()
-                        } },
+                        }
+                    },
                     onLongClick = { cell ->
                         if (viewModel.processInput(cell, remainingUse, longTap = true)) {
                             localView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
@@ -230,16 +237,13 @@ fun GameScreen(
                     positionLines = false,
                     notesToHighLight = emptyList(),
                     enabled = viewModel.gamePlaying && !viewModel.endGame,
-                    questions = null,
                     renderNotes = false,
                     zoomable = false,
                     crossHighlight = false,
-                    cages = viewModel.cages,
                     cellsToHighLight = null
                 )
             }
         }
-
     }
 }
 
@@ -258,3 +262,9 @@ fun TopBoardSection(
         )
     }
 }
+
+//@Preview()
+//@Composable
+//fun PreviewScreen() {
+//
+//}

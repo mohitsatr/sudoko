@@ -1,14 +1,16 @@
 package com.game.sudoku.ui.game.components.board
 
+//
 import android.annotation.SuppressLint
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
-import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -39,7 +41,7 @@ import kotlin.math.sqrt
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun Board(
+fun GameBoard(
     modifier: Modifier = Modifier,
     board: List<List<Cell>>,
     size: Int = board.size,
@@ -62,9 +64,10 @@ fun Board(
     questions: Boolean = false,
     renderNotes: Boolean = true,
     zoomable: Boolean = false,
-    boardColors: SudokuBoardColors = LocalBoardColors.current,
+//    boardColors: SudokuBoardColors = LocalBoardColors.current,
     crossHighlight: Boolean = false,
-    cellsToHighLight: List<Cell>? = null
+    cellsToHighLight: List<Cell>? = null,
+    boardColors: SudokuBoardColors = LocalBoardColors.current,
 ) {
 
     BoxWithConstraints ( modifier = modifier
@@ -105,7 +108,7 @@ fun Board(
         var textPaint by remember(fontSizePx) {
             mutableStateOf(
                 Paint().apply {
-                    color = foregroundColor.toArgb()
+                    color = errorColor.toArgb()
                     isAntiAlias = true
                     textSize = fontSizePx
                 }
@@ -235,7 +238,7 @@ private fun BoardPreviewLight() {
 //                )
 //            }
 //            val notes = listOf(Note(2, 3, 1), Note(2, 3, 5))
-            Board(
+            GameBoard(
                 board = board,
                 notes = null,
                 selectedCell = Cell(-1, -1),

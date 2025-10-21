@@ -1,91 +1,25 @@
+package com.game.sudoku.ui.onboarding
+
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.game.sudoku.data.datastore.AppSettingsManager
-import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
-//
-//import androidx.compose.foundation.ExperimentalFoundationApi
-//import androidx.compose.foundation.background
-//import androidx.compose.foundation.combinedClickable
-//import androidx.compose.foundation.layout.Arrangement
-//import androidx.compose.foundation.layout.Box
-//import androidx.compose.foundation.layout.Column
-//import androidx.compose.foundation.layout.Row
-//import androidx.compose.foundation.layout.Spacer
-//import androidx.compose.foundation.layout.fillMaxSize
-//import androidx.compose.foundation.layout.fillMaxWidth
-//import androidx.compose.foundation.layout.padding
-//import androidx.compose.foundation.layout.size
-//import androidx.compose.foundation.layout.systemBarsPadding
-//import androidx.compose.foundation.layout.width
-//import androidx.compose.foundation.rememberScrollState
-//import androidx.compose.foundation.verticalScroll
-//import androidx.compose.material.icons.Icons
-////import androidx.compose.material.icons.rounded.Language
-////import androidx.compose.material.icons.rounded.Restore
-//import androidx.compose.material.icons.rounded.Settings
-//import androidx.compose.material3.Button
-//import androidx.compose.material3.Icon
-//import androidx.compose.material3.LocalContentColor
-//import androidx.compose.material3.MaterialTheme
-//import androidx.compose.material3.Scaffold
-//import androidx.compose.material3.Text
-//import androidx.compose.material3.surfaceColorAtElevation
-//import androidx.compose.runtime.Composable
-//import androidx.compose.runtime.getValue
-//import androidx.compose.runtime.mutableStateOf
-//import androidx.compose.runtime.remember
-//import androidx.compose.runtime.setValue
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.draw.clip
-//import androidx.compose.ui.graphics.Color
-//import androidx.compose.ui.graphics.Shape
-//import androidx.compose.ui.graphics.vector.ImageVector
-//import androidx.compose.ui.platform.LocalContext
-//import androidx.compose.ui.res.stringResource
-//import androidx.compose.ui.text.TextStyle
-//import androidx.compose.ui.text.font.FontWeight
-//import androidx.compose.ui.text.style.TextAlign
-//import androidx.compose.ui.unit.Dp
-//import androidx.compose.ui.unit.dp
-//import androidx.compose.ui.unit.sp
-//import androidx.hilt.navigation.compose.hiltViewModel
-//import androidx.lifecycle.ViewModel
-//import androidx.lifecycle.viewModelScope
-////import com.kaajjo.libresudoku.R
-////import com.kaajjo.libresudoku.core.Cell
-////import com.kaajjo.libresudoku.core.qqwing.GameType
-////import com.kaajjo.libresudoku.core.utils.SudokuParser
-////import com.kaajjo.libresudoku.data.datastore.AppSettingsManager
-////import com.kaajjo.libresudoku.destinations.BackupScreenDestination
-////import com.kaajjo.libresudoku.destinations.HomeScreenDestination
-////import com.kaajjo.libresudoku.destinations.SettingsCategoriesScreenDestination
-////import com.kaajjo.libresudoku.destinations.SettingsLanguageScreenDestination
-////import com.kaajjo.libresudoku.ui.components.board.Board
-////import com.kaajjo.libresudoku.ui.util.getCurrentLocaleString
-////import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-//import dagger.hilt.android.lifecycle.HiltViewModel
-//import kotlinx.coroutines.Dispatchers
-//import kotlinx.coroutines.launch
-//import javax.inject.Inject
-//
-@Destination
 @Composable
 fun WelcomeScreen(
     viewModel: WelcomeViewModel = hiltViewModel(),
     navigator: DestinationsNavigator
 ) {
-//    val context = LocalContext.current
+    val context = LocalContext.current
 //    val currentLanguage by remember {
 //        mutableStateOf(
-////            getCurrentLocaleString(context)
+//            getCurrentLocaleString(context)
 //        )
 //    }
 //
@@ -255,9 +189,9 @@ class WelcomeViewModel
 //        gameType = GameType.Default9x9
 //    )
 //
-    fun setFirstLaunch(value: Boolean = false) {
-        viewModelScope.launch(Dispatchers.IO) {
-            settingsDataManager.setFirstLaunch(value)
-        }
-    }
+//    fun setFirstLaunch(value: Boolean = false) {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            settingsDataManager.setFirstLaunch(value)
+//        }
+//    }
 }

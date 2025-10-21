@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
     alias(libs.plugins.compose.compiler)
 }
 
@@ -73,9 +74,16 @@ dependencies {
     implementation(libs.androidx.datastore.preferences.v117)
     implementation(libs.androidx.hilt.navigation.fragment)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.room.ktx)
+
     ksp(libs.hiltCompiler)
+
+    // navigation
     implementation(libs.compose.destination)
     ksp(libs.compose.destination.ksp)
+
     implementation(libs.kudoku.parser)
 
 testImplementation(libs.junit)
@@ -86,4 +94,9 @@ testImplementation(libs.junit)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+}
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
