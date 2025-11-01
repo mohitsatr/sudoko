@@ -50,6 +50,8 @@ class AppSettingsManager @Inject constructor(@ApplicationContext context: Contex
 
     private val timerKey = booleanPreferencesKey("timer")
 
+    private val inputMethodKey = intPreferencesKey("input_method")
+
 //     count and show remaining uses for numbers
     private val remainingUseKey = booleanPreferencesKey("remaining_use")
 //
@@ -79,10 +81,19 @@ class AppSettingsManager @Inject constructor(@ApplicationContext context: Contex
         }
     }
 
+    suspend fun setInputMethod(value: Int) {
+        dataStore.edit { settings ->
+            settings[inputMethodKey] = value
+        }
+    }
+
+    val inputMethod = dataStore.data.map { preferences ->
+        preferences[inputMethodKey] ?: 1
+    }
+
     val remainingUse = dataStore.data.map { preferences ->
         preferences[remainingUseKey] ?: true
     }
-
 
     val highlightIdentical = dataStore.data.map { preferences ->
         preferences[highlightIdenticalKey] ?: true

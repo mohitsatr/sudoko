@@ -1,6 +1,8 @@
 package com.game.sudoku.ui.game
 
+import android.os.Build
 import android.view.HapticFeedbackConstants
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -43,13 +45,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.game.sudoku.R
 import com.game.sudoku.core.PreferencesConstants
 import com.game.sudoku.ui.core.Cell
+import com.game.sudoku.ui.game.components.AnimatedNavigation
 import com.game.sudoku.ui.game.components.GameMenu
-import com.game.sudoku.ui.game.components.board.GameBoard
+import com.game.sudoku.ui.game.components.board.GameBoardUi
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
-@Destination<RootGraph>
+@RequiresApi(Build.VERSION_CODES.O)
+@Destination<RootGraph>(
+    style = AnimatedNavigation::class,
+    navArgs = GameScreenNavArgs::class
+)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameScreen(
@@ -57,7 +64,7 @@ fun GameScreen(
     navigator: DestinationsNavigator
 ) {
     val localView = LocalView.current // for vibration
-    var restartButtonAngleState by remember { mutableFloatStateOf(0f) };
+    var restartButtonAngleState by remember { mutableFloatStateOf(0f) }
     val restartButtonAnimation: Float by animateFloatAsState(
         targetValue = restartButtonAngleState,
         animationSpec = tween(durationMillis = 250), label = "restartButtonAnimation"
@@ -93,7 +100,6 @@ fun GameScreen(
                     }
                 },
                 actions = {
-//                     probably for the case when game is paused
                     AnimatedVisibility(visible = !viewModel.endGame) {
                         val rotationAngle by animateFloatAsState(
                             targetValue = 360f,
@@ -127,7 +133,7 @@ fun GameScreen(
                             )
                         }
                     }
-                   AnimatedVisibility(visible = !viewModel.endGame) {
+                    AnimatedVisibility(visible = !viewModel.endGame) {
                        Box {
                            IconButton(onClick = { viewModel.showMenu != !viewModel.showMenu}) {
                                Icon(
@@ -169,7 +175,7 @@ fun GameScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    TopBoardSection(stringResource(viewModel.gameDifficulty.resName))
+                    TopBoardSection(viewModel.gameDifficulty.name)
                     if (mistakeLimit && errorHighlight != 0) {
                         TopBoardSection(
                             stringResource(
@@ -211,7 +217,7 @@ fun GameScreen(
                         )
                     }
                 }
-                GameBoard(
+                GameBoardUi(
                     modifier = Modifier
                         .scale(boardScale, boardScale),
                     board = viewModel.gameBoard,

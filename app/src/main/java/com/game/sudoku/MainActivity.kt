@@ -29,6 +29,7 @@ import com.game.sudoku.core.PreferencesConstants
 import com.game.sudoku.data.datastore.AppSettingsManager
 import com.game.sudoku.data.datastore.ThemeSettingsManager
 import com.game.sudoku.ui.components.NavigationBarComponent
+import com.game.sudoku.ui.home.HomeViewModel
 import com.game.sudoku.ui.theme.SudokuBoardColors.BoardColors
 import com.game.sudoku.ui.theme.SudokuBoardColors.SudokuBoardColorsImpl
 import com.game.sudoku.ui.theme.SudokuTheme
@@ -55,7 +56,8 @@ class MainActivity : ComponentActivity() {
 //        }
         setContent {
             val mainViewModel : MainActivityViewModel = hiltViewModel()
-//
+            val homeViewModel : HomeViewModel = hiltViewModel()
+
             val dynamicColors by mainViewModel.dc.collectAsStateWithLifecycle(isSystemInDarkTheme())
 //            val darkTheme by mainViewModel.darkTheme.collectAsStateWithLifecycle(0)
 //            val firstLaunch by mainViewModel.firstLaunch.collectAsStateWithLifecycle(false)
@@ -79,9 +81,9 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(true) {
                     if (true) {
                         navController.navigate(
-                            route = GameScreenDestination.route,
+                            route = HomeScreenDestination.route,
                             navOptions = navOptions {
-                                popUpTo(GameScreenDestination.route) {
+                                popUpTo(HomeScreenDestination.route) {
                                     inclusive = true
                                 }
                             }

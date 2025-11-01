@@ -6,4 +6,7 @@
     <string name="difficulty_unspecified">Unspecified</string>
     <string name="mistakes_number_out_of">Mistakes %1$d/%2$d\n</string>
     <string name="nav_bar_home">Home</string>
+    <string name="type_unspecifi">Unspecified</string>
+    <string name="default_9x9">9x9</string>
+    <string name="type_default_6x6">6x6</string>
 </resources>

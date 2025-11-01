@@ -4,7 +4,7 @@ package com.game.sudoku.ui.core
 data class Cell(
     val row: Int,
     val column: Int,
-    val value: Int = 0,
-    val error: Boolean = false,
-    val locked: Boolean = false
+    var value: Int = 0,
+    var error: Boolean = false,
+    var locked: Boolean = false
 )

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,7 +40,7 @@ import kotlin.math.sqrt
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun GameBoard(
+fun GameBoardUi(
     modifier: Modifier = Modifier,
     board: List<List<Cell>>,
     size: Int = board.size,
@@ -156,11 +155,9 @@ fun GameBoard(
                     cornerRadius = cornerRadius
                 )
                 if (positionLines) {
-
                 }
             }
             if (identicalNumbersHighlight) {
-
             }
 
             cellsToHighLight?.forEach {
@@ -238,7 +235,7 @@ private fun BoardPreviewLight() {
 //                )
 //            }
 //            val notes = listOf(Note(2, 3, 1), Note(2, 3, 5))
-            GameBoard(
+            GameBoardUi(
                 board = board,
                 notes = null,
                 selectedCell = Cell(-1, -1),
