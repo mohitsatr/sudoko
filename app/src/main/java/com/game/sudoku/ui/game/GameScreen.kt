@@ -1,6 +1,7 @@
 package com.game.sudoku.ui.game
 
 import android.os.Build
+import android.util.Log
 import android.view.HapticFeedbackConstants
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
@@ -27,6 +28,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +43,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.Lifecycling
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.game.sudoku.R
 import com.game.sudoku.core.PreferencesConstants
@@ -51,6 +55,7 @@ import com.game.sudoku.ui.game.components.board.GameBoardUi
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlin.toString
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Destination<RootGraph>(
@@ -101,8 +106,9 @@ fun GameScreen(
                 },
                 actions = {
                     AnimatedVisibility(visible = !viewModel.endGame) {
+                        Log.d("GP", viewModel.gamePlaying.toString())
                         val rotationAngle by animateFloatAsState(
-                            targetValue = 360f,
+                            targetValue = if (viewModel.gamePlaying) 0f else 360f,
                             label = "Play/Pause game icon rotation"
                         )
                         IconButton(onClick = {
@@ -110,7 +116,6 @@ fun GameScreen(
                             viewModel.curCell = Cell(-1, -1, 0)
                         }) {
                             Icon(
-                                // never seen rotate before
                                 modifier = Modifier.rotate(rotationAngle),
                                 painter = painterResource(
                                     if (viewModel.gamePlaying) {
@@ -220,7 +225,7 @@ fun GameScreen(
                 GameBoardUi(
                     modifier = Modifier
                         .scale(boardScale, boardScale),
-                    board = viewModel.gameBoard,
+                    board = if (!viewModel.showSolution) viewModel.gameBoard else viewModel.solvedBoard,
                     notes = viewModel.notes,
                     selectedCell = viewModel.curCell,
                     onClick = { cell ->
@@ -251,6 +256,29 @@ fun GameScreen(
             }
         }
     }
+
+    // without this, timer won't start when board is loaded
+    LaunchedEffect(Unit) {
+        if (!viewModel.endGame) {
+            viewModel.startTimer()
+        }
+    }
+//
+//    OnLifeCycleEvent { _, event ->
+//        when (event) {
+//            Lifecycle.Event.ON_RESUME -> {
+//                if (viewModel.gamePlaying) viewModel.startTimer()
+//            }
+//
+//            Lifecycle.Event.ON_PAUSE -> {
+//                viewModel.pauseTimer()
+//                viewModel.curCell = Cell(-1, -1, 0)
+//            }
+//
+//            Lifecycle.Event.ON_DESTROY -> viewModel.pauseTimer()
+//            else -> {}
+//        }
+//    }
 }
 
 @Composable

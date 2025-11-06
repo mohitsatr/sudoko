@@ -1,6 +1,7 @@
 package com.game.sudoku.ui.game.components.board
 
 import android.graphics.Paint
+import android.util.Log
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -12,6 +13,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toArgb
 import com.game.sudoku.ui.core.Cell
 
 fun DrawScope.drawRoundCell(
@@ -83,7 +86,7 @@ fun DrawScope.drawNumbers(
     highlightErrors: Boolean,
     errorTextPaint: Paint,
     lockedTextPaint: Paint,
-    textPaint: Paint,
+    numberPaint: Paint,
     questions: Boolean,
     cellSize: Float
 ) {
@@ -91,26 +94,40 @@ fun DrawScope.drawNumbers(
         for (i in 0 until size) {
             for (j in 0 until size) {
                 if (board[i][j].value != 0) {
+                    Log.d("board", board[i][j].toString())
                     val paint = when {
                         board[i][j].error && highlightErrors -> errorTextPaint
                         board[i][j].locked -> lockedTextPaint
-                        else -> textPaint
+                        else -> numberPaint
                     }
                     val textToDraw =
                         if (questions) "?" else board[i][j].value.toString(16).uppercase()
 
+                    Log.d("texttodraw", textToDraw)
+
                     val textBounds = android.graphics.Rect()
-                    textPaint.getTextBounds(textToDraw, 0, 1, textBounds)
+                    numberPaint.getTextBounds(textToDraw, 0, 1, textBounds)
                     val textWidth = paint.measureText(textToDraw)
+
+                    val x = board[i][j].column * cellSize + (cellSize - textWidth) / 2f
+                    val y = board[i][j].row * cellSize + (cellSize + textBounds.height()) / 2f
+
+                    Log.d("Text", "width=$textWidth, x=$x, y=$y")
+                    Log.d("Attribute", "cellSize=$cellSize, textBound=$textBounds")
 
                     canvas.nativeCanvas.drawText(
                         textToDraw,
-                        board[i][j].column * cellSize + (cellSize - textWidth) / 2f,
-                        board[i][j].row * cellSize + (cellSize + textBounds.height()) / 2f,
-                        paint
+                        x,
+                        y,
+                        Paint().apply {
+                            textSize = 100f
+                            color = Color.Blue.toArgb()
+                        }
                     )
                 }
             }
         }
     }
 }
+// cellSize =
+// 9 *

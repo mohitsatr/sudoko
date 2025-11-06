@@ -30,18 +30,28 @@ class HomeViewModel
 ) : ViewModel() {
 
     var insertedBoardUid = -1L
+
+    var isGenerating by mutableStateOf(false)
+    var isSolving by mutableStateOf(false)
     var readyToPlay by mutableStateOf(false)
 
     fun startGame() {
+        isSolving = false
+        isGenerating = false
+
         val puzzle = List(9) { row -> List(9) { col -> Cell(row, col, 0) } }
         val solvedPuzzle = List(9) { row -> List(9) { col -> Cell(row, col, 0) } }
 
         viewModelScope.launch(Dispatchers.Default) {
+            isGenerating = true;
             val generator = Sudoku.defaultGenerator()
             val generated = generator.generate(Classic9x9, Difficulty.EASY)
+            isGenerating = false
 
+            isSolving = true
             val solver = Sudoku.defaultSolver()
             val solved = solver.solve(generated)
+            isSolving = false
 
             if (solved.isSolved()) {
                 for (i in 0 until 9) {
@@ -65,8 +75,8 @@ class HomeViewModel
                     )
                 }
 
-                Log.d("insertI", insertedBoardUid.toString())
                 readyToPlay = true
+                Log.d("rop", readyToPlay.toString())
             }
         }
     }

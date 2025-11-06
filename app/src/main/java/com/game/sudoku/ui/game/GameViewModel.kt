@@ -52,7 +52,7 @@ class GameViewModel @Inject constructor(
 
         viewModelScope.launch(Dispatchers.IO) {
             boardEntity = getBoardUseCase(navArgs.gameUid)
-            val savedGame = savedGameRepository.get(boardEntity.uid)
+            val savedGame = savedGameRepository.get(boardEntity.uid - 1)
 
             withContext(Dispatchers.Main) {
                 gameType = boardEntity.type as Classic9x9
@@ -70,6 +70,18 @@ class GameViewModel @Inject constructor(
                     }
                 }
             }
+
+            withContext(Dispatchers.Main) {
+//                if (savedGame != null && continueSaved) {
+//                     restoreSavedGame()
+//                }
+//                else {
+                gameBoard = initialBoard
+//                }
+                size = gameBoard.size
+                remainingUsesList = countRemainingUses(gameBoard)
+            }
+            saveGame()
         }
     }
 

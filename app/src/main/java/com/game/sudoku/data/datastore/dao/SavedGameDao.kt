@@ -15,7 +15,7 @@ interface SavedGameDao {
     @Query("SELECT * FROM saved_game")
     fun getAll(): Flow<List<SavedGame>>
 
-    @Query("SELECT * FROM saved_game WHERE  board_uid == :uid")
+    @Query("SELECT * FROM saved_game WHERE board_uid == :uid")
     suspend fun get(uid: Long): SavedGame?
 
     @Query("SELECT * FROM saved_game " +

@@ -22,6 +22,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -93,6 +94,7 @@ fun GameBoardUi(
         val vertThick by remember(size) { mutableIntStateOf(floor(sqrt(size.toFloat())).toInt()) }
         val horThick by remember(size) { mutableIntStateOf(ceil(sqrt(size.toFloat())).toInt()) }
         var fontSizePx by remember { mutableFloatStateOf(1f) }
+
         with(LocalDensity.current) {
             LaunchedEffect(autoFontSize, size, mainTextSize) {
                 fontSizePx = if (autoFontSize) {
@@ -104,10 +106,10 @@ fun GameBoardUi(
         }
 
         // numbers
-        var textPaint by remember(fontSizePx) {
+        var numberPaint by remember(fontSizePx) {
             mutableStateOf(
                 Paint().apply {
-                    color = errorColor.toArgb()
+                    color = foregroundColor.toArgb()
                     isAntiAlias = true
                     textSize = fontSizePx
                 }
@@ -200,7 +202,7 @@ fun GameBoardUi(
                 highlightErrors = errorsHighlight,
                 errorTextPaint = errorTextPaint,
                 lockedTextPaint = lockedTextPaint,
-                textPaint = textPaint,
+                numberPaint = numberPaint,
                 questions = questions,
                 cellSize = cellSize
             )
@@ -241,7 +243,7 @@ private fun BoardPreviewLight() {
                 selectedCell = Cell(-1, -1),
                 onClick = { },
                 boardColors = SudokuBoardColorsImpl(
-                    foregroundColor = BoardColors.foregroundColor,
+                    foregroundColor = Color.Green,
                     notesColor = BoardColors.notesColor,
                     altForegroundColor = BoardColors.altForegroundColor,
                     errorColor = BoardColors.errorColor,

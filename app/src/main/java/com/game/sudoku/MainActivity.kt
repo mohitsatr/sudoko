@@ -29,6 +29,7 @@ import com.game.sudoku.core.PreferencesConstants
 import com.game.sudoku.data.datastore.AppSettingsManager
 import com.game.sudoku.data.datastore.ThemeSettingsManager
 import com.game.sudoku.ui.components.NavigationBarComponent
+import com.game.sudoku.ui.home.HomeScreen
 import com.game.sudoku.ui.home.HomeViewModel
 import com.game.sudoku.ui.theme.SudokuBoardColors.BoardColors
 import com.game.sudoku.ui.theme.SudokuBoardColors.SudokuBoardColorsImpl
