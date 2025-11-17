@@ -267,7 +267,7 @@ fun GameScreen(
                             size = viewModel.size,
                             remainingUse = if (remainingUse) viewModel.remainingUsesList else null,
                             onClick = {
-//                                    viewModel.processInput
+                                number -> viewModel.processKeyboardInput(number)
                             },
                             selected = 3
                         )

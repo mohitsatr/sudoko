@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.ZonedDateTime
 import java.util.Timer
+import kotlin.compareTo
 import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
@@ -274,6 +275,23 @@ class GameViewModel @Inject constructor(
         }
 
         return new
+    }
+
+    fun processKeyboardInput(number: Int) {
+//        digitFirstNumber = number
+        if (gamePlaying) {
+            if (inputMethod.value == 0 && !currCell.locked && currCell.column >= 0
+                && currCell.row >= 0) {
+//              overrideInputMethodDF = false
+                digitFirstNumber = 0
+                processNumberInput(number)
+//              undoRedoManager.addState(GameState(gameBoard, notes))
+            } else if (inputMethod.value == 1) {
+                digitFirstNumber = if (digitFirstNumber == number) 0 else number
+                currCell = Cell(-1, -1, digitFirstNumber)
+            }
+        }
+//            eraseButtonToggled = false
     }
 
     private fun countRemainingUses(board: List<List<Cell>>): MutableList<Int> {
