@@ -53,6 +53,14 @@ class SudokuParser {
         return boardString
     }
 
+    fun stringToBoard(boardString: String, emptySeparator: Char = '0'): List<List<Cell>> {
+        val board = mutableListOf<Cell>()
+        boardString.forEach {
+            board.add(Cell(0, 0, it.digitToInt(radix)))
+        }
+        return mutableListOf(board)
+    }
+
     fun boardToString(board: IntArray, emptySeparator: Char = '0'): String {
         var boardString = ""
         board.forEach {

@@ -4,6 +4,7 @@ import android.os.Build
 import android.util.Log
 import android.view.HapticFeedbackConstants
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -25,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -43,19 +45,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.Lifecycling
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.game.sudoku.R
 import com.game.sudoku.core.PreferencesConstants
+import com.game.sudoku.core.parser.SudokuParser
 import com.game.sudoku.ui.core.Cell
 import com.game.sudoku.ui.game.components.AnimatedNavigation
+import com.game.sudoku.ui.game.components.DefaultKeyboard
 import com.game.sudoku.ui.game.components.GameMenu
-import com.game.sudoku.ui.game.components.board.GameBoardUi
+import com.game.sudoku.ui.game.components.board.DrawGameBoard
+import com.game.sudoku.ui.theme.SudokuTheme
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import kotlin.toString
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Destination<RootGraph>(
@@ -113,7 +115,7 @@ fun GameScreen(
                         )
                         IconButton(onClick = {
                             if (!viewModel.gamePlaying) viewModel.startTimer() else viewModel.pauseTimer()
-                            viewModel.curCell = Cell(-1, -1, 0)
+                            viewModel.currCell = Cell(-1, -1, 0)
                         }) {
                             Icon(
                                 modifier = Modifier.rotate(rotationAngle),
@@ -222,12 +224,14 @@ fun GameScreen(
                         )
                     }
                 }
-                GameBoardUi(
+                 Log.d("currCell", "${viewModel.currCell}")
+                // viewModel.currCell is correctly being updated here.
+                DrawGameBoard(
                     modifier = Modifier
                         .scale(boardScale, boardScale),
                     board = if (!viewModel.showSolution) viewModel.gameBoard else viewModel.solvedBoard,
                     notes = viewModel.notes,
-                    selectedCell = viewModel.curCell,
+                    selectedCell = viewModel.currCell,
                     onClick = { cell ->
                         viewModel.processInput(
                             cell = cell,
@@ -254,6 +258,22 @@ fun GameScreen(
                     cellsToHighLight = null
                 )
             }
+            AnimatedContent(!viewModel.endGame, label = "") { contentState ->
+                if (contentState) {
+                    Column (
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
+                        DefaultKeyboard(
+                            size = viewModel.size,
+                            remainingUse = if (remainingUse) viewModel.remainingUsesList else null,
+                            onClick = {
+//                                    viewModel.processInput
+                            },
+                            selected = 3
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -272,7 +292,7 @@ fun GameScreen(
 //
 //            Lifecycle.Event.ON_PAUSE -> {
 //                viewModel.pauseTimer()
-//                viewModel.curCell = Cell(-1, -1, 0)
+//                viewModel.currCell = Cell(-1, -1, 0)
 //            }
 //
 //            Lifecycle.Event.ON_DESTROY -> viewModel.pauseTimer()
@@ -300,5 +320,12 @@ fun TopBoardSection(
 //@Preview()
 //@Composable
 //fun PreviewScreen() {
-//
+//    val sudokuParser = SudokuParser()
+//    sudokuParser.
+//    SudokuTheme {
+//        Surface {
+//            DrawGameBoard(
+//            )
+//        }
+//    }
 //}

@@ -1,6 +1,7 @@
 package com.game.sudoku.ui.game
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -140,7 +141,6 @@ class GameViewModel @Inject constructor(
     private var sudokuUtils = SudokuUtils()
 
     var restartDialog by mutableStateOf(false)
-    var curCell by mutableStateOf(Cell(-1, -1, 0))
     var gamePlaying by mutableStateOf(false)
     var endGame by mutableStateOf(false)
     private lateinit var timer: Timer
@@ -211,15 +211,16 @@ class GameViewModel @Inject constructor(
 
     fun processInput(cell: Cell, remainingUse: Boolean, longTap: Boolean = false): Boolean {
         if (gamePlaying) {
-            currCell = if (curCell.row == cell.row && curCell.column == cell.column
+            currCell = if (currCell.row == cell.row && currCell.column == cell.column
                 && digitFirstNumber == 0) {
                 Cell(-1, -1)
             } else {
                 cell
             }
+            Log.d("processInput", "currCell: $currCell")
 
-            if (curCell.row > -1 && curCell.column > -1
-                && !gameBoard[curCell.row][curCell.column].locked) {
+            if (currCell.row > -1 && currCell.column > -1
+                && !gameBoard[currCell.row][currCell.column].locked) {
 
                 if (inputMethod.value == 1 && digitFirstNumber > 0) {
                     if (!longTap) {
@@ -228,7 +229,7 @@ class GameViewModel @Inject constructor(
                             processNumberInput(digitFirstNumber)
 //                            undoRedoManager.
                             if (notesToggled) {
-                                curCell = Cell(currCell.row, currCell.column,
+                                currCell = Cell(currCell.row, currCell.column,
                                     digitFirstNumber)
                             }
                         }
