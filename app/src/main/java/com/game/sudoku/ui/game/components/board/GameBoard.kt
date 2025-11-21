@@ -79,7 +79,7 @@ fun DrawGameBoard(
     ) {
 
         val maxWidth = constraints.maxWidth.toFloat()
-        val thickLineWidth = with(LocalDensity.current) { 1.3.dp.toPx() }
+        val thickLineWidth = with(LocalDensity.current) { 2.dp.toPx() }
         val thinLineWidth = with(LocalDensity.current) { 1.3.dp.toPx() }
 
         // single cell size
@@ -110,9 +110,12 @@ fun DrawGameBoard(
         val errorColor = boardColors.errorColor
         val thickLineColor = boardColors.thickLineColor
         val thinLineColor = boardColors.thinLineColor
-        val foregroundColor = boardColors.foregroundColor
+        val foregroundColor = boardColors.boardBackgroundColor
         val altForegroundColor = boardColors.altForegroundColor
-        val highlightColor = boardColors.highlightColor
+        val nonSelectedHighlightColor = boardColors.nonSelectedHighlightColor
+        val nonSelectedHighlightTextColor = boardColors.nonSelectedHighlightTextColor
+        val selectedHighlightColor = boardColors.selectedHighlightColor
+        val selectedHighlightTextColor = boardColors.selectedHighlightTextColor
 
         val vertThick by remember(size) { mutableIntStateOf(floor(sqrt(size.toFloat())).toInt()) }
         val horThick by remember(size) { mutableIntStateOf(ceil(sqrt(size.toFloat())).toInt()) }
@@ -129,15 +132,25 @@ fun DrawGameBoard(
         }
 
         // numbers
-        var numberPaint by remember(fontSizePx) {
+        var nonSelectedNumberPaint by remember(fontSizePx) {
             mutableStateOf(
                 Paint().apply {
-                    color = foregroundColor.toArgb()
+                    color = nonSelectedHighlightTextColor.toArgb()
                     isAntiAlias = true
                     textSize = fontSizePx
                 }
             )
         }
+
+        var selectedNumberPaint by remember(fontSizePx) {
+        mutableStateOf(
+            Paint().apply {
+                color = selectedHighlightTextColor.toArgb()
+                isAntiAlias = true
+                textSize = fontSizePx
+            }
+        )
+    }
         // errors
         var errorTextPaint by remember {
             mutableStateOf(
@@ -194,11 +207,32 @@ fun DrawGameBoard(
                         row = selectedCell.row,
                         col = selectedCell.column,
                         gameSize = size,
-                        color = highlightColor.copy(alpha = 0.1f),
+                        color = nonSelectedHighlightColor ,
                         cellSize = cellSize,
                         lineLength = maxWidth,
                         cornerRadius = cornerRadius
                     )
+                }
+            }
+
+            // non-selected bubble around numbers
+            for (i in 0 until size) {
+                for (j in 0 until size) {
+                    val currentCell = board[i][j]
+                    if (currentCell.locked) {
+                        drawRoundCell(
+                            row = currentCell.row,
+                            col = currentCell.column,
+                            gameSize = size,
+                            rect = Rect(
+                                offset = Offset(
+                                    x = currentCell.column * cellSize,
+                                    y = currentCell.row * cellSize),
+                                size = Size(cellSize, cellSize)
+                            ),
+                            color = nonSelectedHighlightColor
+                        )
+                    }
                 }
             }
             if (identicalNumbersHighlight) {
@@ -217,7 +251,7 @@ fun DrawGameBoard(
                                     ),
                                     size = Size(cellSize, cellSize)
                                 ),
-                                color = Color.Green
+                                color = selectedHighlightColor
                             )
                         }
                     }
@@ -230,7 +264,7 @@ fun DrawGameBoard(
                     row = it.row,
                     col = it.column,
                     gameSize = size,
-                    color = highlightColor.copy(alpha = 0.3f),
+                    color = nonSelectedHighlightColor,
                     rect = Rect(
                         Offset(
                             x = it.column * cellSize,
@@ -245,7 +279,7 @@ fun DrawGameBoard(
             // horizontal lines
             for (i in 1 until size) {
                 drawLine(
-                    color = if (i % 3 == 0) Color.White else Color.Gray,
+                    color = if (i % 3 == 0) thickLineColor else thinLineColor,
                     start = Offset(cellSize * i.toFloat(), 0f),
                     end = Offset(cellSize * i.toFloat(), maxWidth),
                     strokeWidth = if (i % 3 == 0) thickLineWidth else thinLineWidth
@@ -256,7 +290,7 @@ fun DrawGameBoard(
             for (i in 1 until size) {
                 if (maxWidth >= cellSize * i) {
                     drawLine(
-                        color = if (i % 3 == 0) Color.White else Color.Gray,
+                        color = if (i % 3 == 0) thickLineColor else thinLineColor,
                         start = Offset(0f, cellSize * i.toFloat()),
                         end = Offset(maxWidth, cellSize * i.toFloat()),
                         strokeWidth = if (i % 3 == 0) thickLineWidth else thinLineWidth
@@ -264,15 +298,17 @@ fun DrawGameBoard(
                 }
             }
 
+
             drawNumbers(
                 size = size,
                 board = board,
                 highlightErrors = errorsHighlight,
                 errorTextPaint = errorTextPaint,
-                lockedTextPaint = lockedTextPaint,
-                numberPaint = numberPaint,
+                nonSelectedHighlightPaint = nonSelectedNumberPaint,
+                selectedHighlightPaint = selectedNumberPaint,
                 questions = questions,
-                cellSize = cellSize
+                cellSize = cellSize,
+                selectedCell = selectedCell
             )
         }
     }
@@ -303,9 +339,9 @@ private fun BoardPreviewLight() {
                 val errorColor = boardColors.errorColor
                 val thickLineColor = boardColors.thickLineColor
                 val thinLineColor = boardColors.thinLineColor
-                val foregroundColor = boardColors.foregroundColor
+                val foregroundColor = boardColors.boardBackgroundColor
                 val altForegroundColor = boardColors.altForegroundColor
-                val highlightColor = boardColors.highlightColor
+                val highlightColor = boardColors.nonSelectedHighlightColor
 
                 val vertThick by remember(size) { mutableIntStateOf(floor(sqrt(size.toFloat())).toInt()) }
                 val horThick by remember(size) { mutableIntStateOf(ceil(sqrt(size.toFloat())).toInt()) }

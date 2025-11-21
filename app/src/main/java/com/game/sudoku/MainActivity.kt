@@ -3,7 +3,6 @@ package com.game.sudoku
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
@@ -29,7 +28,6 @@ import com.game.sudoku.core.PreferencesConstants
 import com.game.sudoku.data.datastore.AppSettingsManager
 import com.game.sudoku.data.datastore.ThemeSettingsManager
 import com.game.sudoku.ui.components.NavigationBarComponent
-import com.game.sudoku.ui.home.HomeScreen
 import com.game.sudoku.ui.home.HomeViewModel
 import com.game.sudoku.ui.theme.SudokuBoardColors.BoardColors
 import com.game.sudoku.ui.theme.SudokuBoardColors.SudokuBoardColorsImpl
@@ -96,13 +94,16 @@ class MainActivity : ComponentActivity() {
 //
                 val boardColors =
                         SudokuBoardColorsImpl(
-                            foregroundColor = MaterialTheme.colorScheme.onSurface,
+                            boardBackgroundColor = BoardColors.boardBackgroundColor,
                             notesColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
                             altForegroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             errorColor = BoardColors.errorColor,
-                            highlightColor = MaterialTheme.colorScheme.outline,
-                            thickLineColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.55f),
-                            thinLineColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.25f)
+                            nonSelectedHighlightColor = BoardColors.nonSelectedHighlightColor,
+                            nonSelectedHighlightTextColor = BoardColors.nonSelectedHighlightTextColor,
+                            selectedHighlightColor = BoardColors.selectedHighlightColor,
+                            selectedHighlightTextColor = BoardColors.selectedHighlightTextColor,
+                            thickLineColor = BoardColors.thickLineColor,
+                            thinLineColor = BoardColors.thinLineColor
                         )
                 CompositionLocalProvider(LocalBoardColors provides boardColors) {
                     Scaffold(

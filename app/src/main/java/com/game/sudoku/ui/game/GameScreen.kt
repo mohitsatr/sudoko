@@ -269,7 +269,7 @@ fun GameScreen(
                             onClick = {
                                 number -> viewModel.processKeyboardInput(number)
                             },
-                            selected = 3
+                            selected = 0
                         )
                     }
                 }

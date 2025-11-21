@@ -10,6 +10,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.game.sudoku.ui.theme.LightColorScheme
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -36,25 +37,22 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun SudokuTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
-    amoled: Boolean = false,
-    colorSeed: Color = Color.Green,
-    paletteStyle: Color  = Color.Unspecified,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = SudokuLightTheme
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = SudokuLightTheme,
         typography = Typography,
         content = content
     )
 }
+
+val SudokuLightTheme = lightColorScheme(
+    primary = primary,
+    onPrimary = onPrimary,
+    primaryContainer = primaryContainer,
+    onPrimaryContainer = OnPrimaryContainer,
+    outline = outline,
+    surface = surface
+)

@@ -41,3 +41,22 @@ val Pink80 = Color(0xFFEFB8C8)
 val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
+
+//val onSurface = Color()
+val primary = Color(0xFFE6E6E6) // non-selected bubble
+val onPrimary = Color(0xFFA1A1A1) // numbers on non-selected and keypad
+val primaryContainer = Color(0xFFBAB6A8) // selected bubble
+val OnPrimaryContainer = Color(0xFFF9F9F8) // white text when numbers are filled
+
+//val secondary = Color()
+//val onSecondary = Color()
+
+//val teritary = Color()
+//val onTertiary = Color()
+
+val outline = Color(0xFFD8D8D8) // outline around keypad and lines making up cells
+
+val surface = Color(0xFFF9F9F9) // background
+//val onSurface = Color()
+
+

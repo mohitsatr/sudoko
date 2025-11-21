@@ -13,9 +13,9 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.toArgb
 import com.game.sudoku.ui.core.Cell
+
 
 fun DrawScope.drawRoundCell(
     row: Int,
@@ -85,20 +85,21 @@ fun DrawScope.drawNumbers(
     board: List<List<Cell>>,
     highlightErrors: Boolean,
     errorTextPaint: Paint,
-    lockedTextPaint: Paint,
-    numberPaint: Paint,
+    nonSelectedHighlightPaint: Paint,
+    selectedHighlightPaint: Paint,
     questions: Boolean,
-    cellSize: Float
+    cellSize: Float,
+    selectedCell: Cell
 ) {
     drawIntoCanvas { canvas ->
         for (i in 0 until size) {
             for (j in 0 until size) {
+                val isSelected = board[i][j].value == selectedCell.value && selectedCell.value != 0
+
                 if (board[i][j].value != 0) {
-                    Log.d("board", board[i][j].toString())
                     val paint = when {
-                        board[i][j].error && highlightErrors -> errorTextPaint
-                        board[i][j].locked -> lockedTextPaint
-                        else -> numberPaint
+                        isSelected -> selectedHighlightPaint
+                        else -> nonSelectedHighlightPaint
                     }
                     val textToDraw =
                         if (questions) "?" else board[i][j].value.toString(16).uppercase()
@@ -106,7 +107,7 @@ fun DrawScope.drawNumbers(
                     Log.d("texttodraw", textToDraw)
 
                     val textBounds = android.graphics.Rect()
-                    numberPaint.getTextBounds(textToDraw, 0, 1, textBounds)
+                    selectedHighlightPaint.getTextBounds(textToDraw, 0, 1, textBounds)
                     val textWidth = paint.measureText(textToDraw)
 
                     val x = board[i][j].column * cellSize + (cellSize - textWidth) / 2f
@@ -119,10 +120,7 @@ fun DrawScope.drawNumbers(
                         textToDraw,
                         x,
                         y,
-                        Paint().apply {
-                            textSize = 100f
-                            color = Color.Blue.toArgb()
-                        }
+                        paint
                     )
                 }
             }
