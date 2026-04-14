@@ -1,9 +1,15 @@
 package com.game.sudoku.domain.repository
 
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import com.game.sudoku.data.datastore.dao.SavedGameDao
 import com.game.sudoku.data.datastore.model.SavedGame
 import com.game.sudoku.data.datastore.model.SudokuBoard
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.toSet
 
 class SavedGameRepositoryImpl(
     private val savedGameDao: SavedGameDao
@@ -16,7 +22,19 @@ class SavedGameRepositoryImpl(
 
     override fun getLast(): Flow<SavedGame?> = savedGameDao.getLast()
 
-    override fun getLastPlayable(limit: Int): Flow<Map<SavedGame, SudokuBoard>> = savedGameDao.getLastPlayable(limit)
+    override fun getLastPlayable(limit: Int): Flow<Map<SavedGame, SudokuBoard>> {
+        return savedGameDao.getLastPlayable(limit)
+//            .onEach { dataMap ->
+//                if (dataMap.isEmpty()) {
+//                    Log.d("getLastPlayable", "result is empty")
+//                }
+//                else {
+//                    dataMap.forEach { (game, board) ->
+//                        Log.d("getLastPlayable", "game: ${game.uid}, board: ${board.uid}")
+//                    }
+//                }
+//            }
+    }
 
     override suspend fun insert(savedGame: SavedGame): Long = savedGameDao.insert(savedGame)
 

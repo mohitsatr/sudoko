@@ -1,5 +1,6 @@
 package com.game.sudoku.domain.repository
 
+import android.util.Log
 import androidx.room.Query
 import com.game.sudoku.data.datastore.dao.BoardDao
 import com.game.sudoku.data.datastore.model.SudokuBoard
@@ -19,7 +20,12 @@ class BoardRepositoryImpl(
     override suspend fun get(uid: Long): SudokuBoard = boardDao.get(uid)
 
     override suspend fun insert(boards: List<SudokuBoard>): List<Long> = boardDao.insert(boards)
-    override suspend fun insert(board: SudokuBoard): Long = boardDao.insert(board)
+    override suspend fun insert(board: SudokuBoard): Long {
+        val result = boardDao.insert(board)
+        Log.d("BoardRepoImpl", "board: ${board.uid} got inserted")
+
+        return result
+    }
 
     override suspend fun delete(board: SudokuBoard) = boardDao.delete(board)
     override suspend fun delete(boards: List<SudokuBoard>) = boardDao.delete(boards)

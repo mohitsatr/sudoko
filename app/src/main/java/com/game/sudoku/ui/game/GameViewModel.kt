@@ -37,6 +37,7 @@ import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
+import kotlin.time.toKotlinDuration
 
 @RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
@@ -54,7 +55,7 @@ class GameViewModel @Inject constructor(
 
         viewModelScope.launch(Dispatchers.IO) {
             boardEntity = getBoardUseCase(navArgs.gameUid)
-            val savedGame = savedGameRepository.get(boardEntity.uid - 1)
+            val savedGame = savedGameRepository.get(boardEntity.uid)
 
             withContext(Dispatchers.Main) {
                 gameType = boardEntity.type as Classic9x9
@@ -74,12 +75,12 @@ class GameViewModel @Inject constructor(
             }
 
             withContext(Dispatchers.Main) {
-//                if (savedGame != null && continueSaved) {
-//                     restoreSavedGame()
-//                }
-//                else {
-                gameBoard = initialBoard
-//                }
+                if (savedGame != null && continueSaved) {
+                     restoreSavedGame(savedGame)
+                }
+                else {
+                    gameBoard = initialBoard
+                }
                 size = gameBoard.size
                 remainingUsesList = countRemainingUses(gameBoard)
             }
@@ -164,6 +165,7 @@ class GameViewModel @Inject constructor(
                     if (gameBoard.any { it.any { cell -> cell.value != 0}}) {
                         viewModelScope.launch(Dispatchers.IO) {
                             saveGame()
+                            Log.d("StartTimer", "savedGame()")
                         }
                     }
                 }
@@ -180,8 +182,22 @@ class GameViewModel @Inject constructor(
 
     }
 
-    private fun restoreSavedGame(savedGame: SavedGame?) {
+    private fun restoreSavedGame(savedGame: SavedGame) {
+        Log.d("restoreSavedGame", "Game restored: Game:${savedGame.uid} Board ${boardEntity.uid}")
+        duration = savedGame.timer.toKotlinDuration()
+        timeText = duration.toFormattedString()
 
+        val sudokuParser = SudokuParser()
+        gameBoard = sudokuParser.parseBoard(
+            savedGame.currentBoard,
+            gameType = boardEntity.type as Classic9x9
+        )
+
+        for (i in gameBoard.indices) {
+            for (j in gameBoard[0].indices) {
+                gameBoard[i][j].locked = initialBoard[i][j].locked
+            }
+        }
     }
 
     private suspend fun saveGame() {
@@ -196,17 +212,18 @@ class GameViewModel @Inject constructor(
                     lastPlayed = ZonedDateTime.now()
                 )
             )
+            Log.d("saveGame", "Game updated: Game:${savedGame.uid} Board ${boardEntity.uid}")
         }
         else {
-            savedGameRepository.insert(
-                SavedGame(
-                    uid = boardEntity.uid,
-                    currentBoard = sudokuParser.boardToString(gameBoard),
-                    notes = sudokuParser.notesToString(notes),
-                    timer = java.time.Duration.ofSeconds(duration.inWholeSeconds),
-                    lastPlayed = ZonedDateTime.now(),
-                )
+            val game = SavedGame(
+                uid = boardEntity.uid,
+                currentBoard = sudokuParser.boardToString(gameBoard),
+                notes = sudokuParser.notesToString(notes),
+                timer = java.time.Duration.ofSeconds(duration.inWholeSeconds),
+                lastPlayed = ZonedDateTime.now(),
             )
+            savedGameRepository.insert(game)
+            Log.d("saveGame", "Game inserted: Game:${game.uid} Board ${boardEntity.uid}")
         }
     }
 

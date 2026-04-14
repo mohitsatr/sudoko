@@ -7,7 +7,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.game.sudoku.core.parser.SudokuParser
-import com.game.sudoku.data.datastore.AppSettingsManager
 import com.game.sudoku.data.datastore.model.SudokuBoard
 import com.game.sudoku.domain.repository.BoardRepository
 import com.game.sudoku.domain.repository.SavedGameRepository
@@ -20,6 +19,8 @@ import io.github.ilikeyourhat.kudoku.solving.defaultSolver
 import io.github.ilikeyourhat.kudoku.type.Classic9x9
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -27,6 +28,7 @@ import kotlinx.coroutines.withContext
 class HomeViewModel
 @Inject constructor(
     private val boardRepository: BoardRepository,
+    private val savedGameRepository: SavedGameRepository,
 ) : ViewModel() {
 
     var insertedBoardUid = -1L
@@ -34,6 +36,13 @@ class HomeViewModel
     var isGenerating by mutableStateOf(false)
     var isSolving by mutableStateOf(false)
     var readyToPlay by mutableStateOf(false)
+
+    val lastGames = savedGameRepository.getLastPlayable(5)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = emptyMap()
+        )
 
     fun startGame() {
         isSolving = false
@@ -61,7 +70,6 @@ class HomeViewModel
                     }
                 }
 
-                Log.d("insertI", insertedBoardUid.toString())
                 withContext(Dispatchers.IO) {
                     val sudokuParser = SudokuParser()
                     insertedBoardUid = boardRepository.insert(
@@ -73,10 +81,9 @@ class HomeViewModel
                             type = Classic9x9
                         )
                     )
+                    Log.d("startGame", "$insertedBoardUid got inserted")
                 }
-
                 readyToPlay = true
-                Log.d("rop", readyToPlay.toString())
             }
         }
     }
