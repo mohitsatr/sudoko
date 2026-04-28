@@ -26,10 +26,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -43,13 +43,15 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.game.sudoku.R
 import com.game.sudoku.core.PreferencesConstants
-import com.game.sudoku.core.parser.SudokuParser
 import com.game.sudoku.ui.core.Cell
 import com.game.sudoku.ui.game.components.AnimatedNavigation
 import com.game.sudoku.ui.game.components.DefaultKeyboard
@@ -77,94 +79,113 @@ fun GameScreen(
         targetValue = restartButtonAngleState,
         animationSpec = tween(durationMillis = 250), label = "restartButtonAnimation"
     )
-
     val mistakeLimit by viewModel.mistakeLimit.collectAsStateWithLifecycle(
         initialValue = PreferencesConstants.DEFAULT_MISTAKES_LIMIT
     )
     val errorHighlight by viewModel.mistakesMethod.collectAsStateWithLifecycle(
         initialValue = PreferencesConstants.DEFAULT_HIGHLIGHT_MISTAKES
     )
-
     val remainingUse by viewModel.remainingUse.collectAsStateWithLifecycle(initialValue = false)
-    val highlightIdentical by viewModel.identicalHighlight.collectAsStateWithLifecycle(
-        initialValue = true
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // without this, timer won't start when board is loaded
+    LaunchedEffect(Unit) {
+        if (!viewModel.endGame) {
+            viewModel.startTimer()
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                viewModel.pauseTimer()
+                viewModel.currCell = Cell(-1, -1, 0)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    GameScreenContent(
+        isGameRunning = viewModel.gamePlaying,
+        hasGameEnded = viewModel.endGame,
+        boardSize = viewModel.size,
+        difficultyLevel = viewModel.gameDifficulty.name,
+        mistakeLimit = mistakeLimit,
+        errorHighlight = errorHighlight,
+        remainingUsesList = viewModel.remainingUsesList,
+        remainingUse = remainingUse,
+        showSolution = viewModel.showSolution,
+        unSolvedBoard = viewModel.gameBoard,
+        solvedBoard = viewModel.solvedBoard,
+        curCell = viewModel.currCell,
+        timeText = viewModel.timeText,
+        onBackClick = { navigator.popBackStack() },
+        onPauseButtonClick = {
+            if (!viewModel.gamePlaying) viewModel.startTimer() else viewModel.pauseTimer()
+            viewModel.currCell = Cell(-1, -1, 0)
+        },
+        onRestartButtonClick = {},
+        onGiveUp = {
+            viewModel.pauseTimer()
+            viewModel.giveUpDialog = true
+        },
+        onKeyboardClick = { number ->
+            viewModel.processKeyboardInput(number)
+        },
+        onCellClick = { cell ->
+            viewModel.processInput(
+                cell = cell,
+                remainingUse = remainingUse,
+            )
+            if (viewModel.gamePlaying) {
+                localView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                viewModel.startTimer()
+            }
+        },
     )
+}
+
+@Composable
+fun GameScreenContent(
+    isGameRunning: Boolean,
+    hasGameEnded: Boolean,
+    boardSize: Int,
+    onBackClick: () -> Unit,
+    onPauseButtonClick: () -> Unit,
+    onRestartButtonClick: () -> Unit,
+    onGiveUp: () -> Unit,
+    onKeyboardClick: (Int) -> Unit,
+    onCellClick: (Cell) -> Unit,
+    difficultyLevel: String,
+    mistakeLimit: Boolean,
+    errorHighlight: Int,
+    remainingUsesList: List<Int>,
+    remainingUse: Boolean,
+    showSolution: Boolean,
+    unSolvedBoard: List<List<Cell>>,
+    solvedBoard: List<List<Cell>>,
+    curCell: Cell,
+    timeText: String
+) {
     val boardScale by animateFloatAsState(
-        targetValue = if (viewModel.gamePlaying || viewModel.endGame) 1f else 0.90f,
+        targetValue = if (isGameRunning || hasGameEnded) 1f else 0.90f,
         label = "Game board scale"
     )
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigator.popBackStack() }
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_round_arrow_back_24),
-                            contentDescription = null
-                        )
-                    }
-                },
-                actions = {
-                    AnimatedVisibility(visible = !viewModel.endGame) {
-                        Log.d("GP", viewModel.gamePlaying.toString())
-                        val rotationAngle by animateFloatAsState(
-                            targetValue = if (viewModel.gamePlaying) 0f else 360f,
-                            label = "Play/Pause game icon rotation"
-                        )
-                        IconButton(onClick = {
-                            if (!viewModel.gamePlaying) viewModel.startTimer() else viewModel.pauseTimer()
-                            viewModel.currCell = Cell(-1, -1, 0)
-                        }) {
-                            Icon(
-                                modifier = Modifier.rotate(rotationAngle),
-                                painter = painterResource(
-                                    if (viewModel.gamePlaying) {
-                                        R.drawable.ic_round_pause_24
-                                    } else {
-                                        R.drawable.ic_round_play_24
-                                    }
-                                ),
-                                contentDescription = null
-                            )
-                        }
-                    }
-                    AnimatedVisibility(visible = !viewModel.endGame) {
-                        IconButton(onClick = { viewModel.restartDialog = true }) {
-                            Icon(
-                                // why is not restartButtonAnimation defined closer?
-                                modifier = Modifier.rotate(restartButtonAnimation),
-                                painter = painterResource(R.drawable.ic_round_replay_24),
-                                contentDescription = null
-                            )
-                        }
-                    }
-                    AnimatedVisibility(visible = !viewModel.endGame) {
-                       Box {
-                           IconButton(onClick = { viewModel.showMenu != !viewModel.showMenu}) {
-                               Icon(
-                                   Icons.Default.MoreVert,
-                                   contentDescription = null
-                               )
-                           }
-                       }
-                       GameMenu(
-                           expanded = viewModel.showMenu,
-                           onDismiss = { viewModel.showMenu = false },
-                           onGiveUpClick = {
-                               viewModel.pauseTimer()
-                               viewModel.giveUpDialog = true
-                           },
-                           onSettingsClick = {
-                               // navigate to settings
-                               viewModel.showMenu = false
-                           },
-                           onExportClicked = {}
-                       )
-                   }
-                }
+            GameHeader(
+                isGameRunning = isGameRunning,
+                hasGameEnded = hasGameEnded,
+                onBackClick = onBackClick ,
+                onPauseButtonClick = onPauseButtonClick,
+                onRestartButtonClick = {},
+                onGiveUp = onGiveUp,
+                onGameMenuDismiss = {},
+                onMenuClick = {}
             )
         }
     ) { scaffoldPaddings ->
@@ -172,10 +193,9 @@ fun GameScreen(
             modifier = Modifier
                 .padding(scaffoldPaddings)
                 .padding(horizontal = 12.dp),
-            // https://stackoverflow.com/questions/77858902/difference-between-verticalarrangement-arrangement-center-and-textalign
             verticalArrangement = Arrangement.SpaceEvenly,
         ) {
-            AnimatedVisibility(visible = !viewModel.endGame) {
+            AnimatedVisibility(visible = !hasGameEnded) {
                 Row (
                     modifier = Modifier
                         .fillMaxWidth()
@@ -183,13 +203,11 @@ fun GameScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    TopBoardSection(viewModel.gameDifficulty.name)
+                    TopBoardSection(difficultyLevel)
                     if (mistakeLimit && errorHighlight != 0) {
                         TopBoardSection(
                             stringResource(
-                                id = R.string.mistakes_number_out_of,
-                                viewModel.mistakesCount,
-                                3
+                                id = R.string.mistakes_number_out_of, 3
                             )
                         )
                     }
@@ -197,13 +215,13 @@ fun GameScreen(
 //                        initialValue = PreferencesConstants.DEFAULT_SHOW_TIMER
 //                    )
                     val timerEnabled = true
-                    AnimatedVisibility(visible = timerEnabled || viewModel.endGame) {
-                        TopBoardSection(viewModel.timeText)
+                    AnimatedVisibility(visible = timerEnabled || hasGameEnded) {
+                        TopBoardSection(timeText)
                     }
                 }
             }
 
-//            render
+//          render
             Box(modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 12.dp)
@@ -212,7 +230,7 @@ fun GameScreen(
                     modifier = Modifier.align(Alignment.Center)
                 ) {
                     AnimatedVisibility(
-                        visible = !viewModel.gamePlaying && !viewModel.endGame,
+                        visible = !isGameRunning && !hasGameEnded,
                         enter = expandVertically(clip = false) + fadeIn(),
                         exit = shrinkVertically(clip = false) + fadeOut()
                     ) {
@@ -225,51 +243,35 @@ fun GameScreen(
                         )
                     }
                 }
-                 Log.d("currCell", "${viewModel.currCell}")
                 // viewModel.currCell is correctly being updated here.
                 DrawGameBoard(
                     modifier = Modifier
                         .scale(boardScale, boardScale),
-                    board = if (!viewModel.showSolution) viewModel.gameBoard else viewModel.solvedBoard,
-                    notes = viewModel.notes,
-                    selectedCell = viewModel.currCell,
-                    onClick = { cell ->
-                        viewModel.processInput(
-                            cell = cell,
-                            remainingUse = remainingUse,
-                        )
-                        if (!viewModel.gamePlaying) {
-                            localView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                            viewModel.startTimer()
-                        }
-                    },
-                    onLongClick = { cell ->
-                        if (viewModel.processInput(cell, remainingUse, longTap = true)) {
-                            localView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                        }
-                    },
-                    identicalNumbersHighlight = highlightIdentical,
+                    board = if (!showSolution) unSolvedBoard else solvedBoard,
+                    notes = null,
+                    selectedCell = curCell,
+                    onClick = onCellClick,
+                    onLongClick = {},
+                    identicalNumbersHighlight = true,
                     errorsHighlight = errorHighlight != 0,
                     positionLines = false,
                     notesToHighLight = emptyList(),
-                    enabled = viewModel.gamePlaying && !viewModel.endGame,
+                    enabled = isGameRunning && !hasGameEnded,
                     renderNotes = false,
                     zoomable = false,
                     crossHighlight = false,
                     cellsToHighLight = null
                 )
             }
-            AnimatedContent(!viewModel.endGame, label = "") { contentState ->
+            AnimatedContent(!hasGameEnded, label = "") { contentState ->
                 if (contentState) {
                     Column (
                         verticalArrangement = Arrangement.Bottom
                     ) {
                         DefaultKeyboard(
-                            size = viewModel.size,
-                            remainingUse = if (remainingUse) viewModel.remainingUsesList else null,
-                            onClick = {
-                                number -> viewModel.processKeyboardInput(number)
-                            },
+                            size = boardSize,
+                            remainingUse = if (remainingUse) remainingUsesList else null,
+                            onClick = onKeyboardClick,
                             selected = 0
                         )
                     }
@@ -277,29 +279,79 @@ fun GameScreen(
             }
         }
     }
+}
 
-    // without this, timer won't start when board is loaded
-    LaunchedEffect(Unit) {
-        if (!viewModel.endGame) {
-            viewModel.startTimer()
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GameHeader(
+    isGameRunning: Boolean,
+    hasGameEnded: Boolean,
+    onBackClick: () -> Unit,
+    onPauseButtonClick: () -> Unit,
+    onRestartButtonClick: () -> Unit,
+    onMenuClick: () -> Unit,
+    onGameMenuDismiss: () -> Unit,
+    onGiveUp: () -> Unit
+) {
+    TopAppBar(
+        title = {},
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_round_arrow_back_24),
+                    contentDescription = null
+                )
+            }
+        },
+        actions = {
+            AnimatedVisibility(visible = !hasGameEnded) {
+                Log.d("GP", "$isGameRunning")
+                val rotationAngle by animateFloatAsState(
+                    targetValue = if (isGameRunning) 0f else 360f,
+                    label = "Play/Pause game icon rotation"
+                )
+                IconButton(onClick = onPauseButtonClick) {
+                    Icon(
+                        modifier = Modifier.rotate(rotationAngle),
+                        painter = painterResource(
+                            if (isGameRunning) {
+                                R.drawable.ic_round_pause_24
+                            } else {
+                                R.drawable.ic_round_play_24
+                            }
+                        ),
+                        contentDescription = null
+                    )
+                }
+            }
+            AnimatedVisibility(visible = hasGameEnded) {
+                IconButton(onClick = onRestartButtonClick) {
+                    Icon(
+                        modifier = Modifier.rotate(180f),
+                        painter = painterResource(R.drawable.ic_round_replay_24),
+                        contentDescription = null
+                    )
+                }
+            }
+            AnimatedVisibility(visible = !hasGameEnded) {
+                Box {
+                    IconButton(onClick = onMenuClick) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = null
+                        )
+                    }
+                }
+                GameMenu(
+                    expanded = false,
+                    onDismiss = onGameMenuDismiss,
+                    onGiveUpClick = onGiveUp,
+                    onSettingsClick = {},
+                    onExportClicked = {}
+                )
+            }
         }
-    }
-//
-//    OnLifeCycleEvent { _, event ->
-//        when (event) {
-//            Lifecycle.Event.ON_RESUME -> {
-//                if (viewModel.gamePlaying) viewModel.startTimer()
-//            }
-//
-//            Lifecycle.Event.ON_PAUSE -> {
-//                viewModel.pauseTimer()
-//                viewModel.currCell = Cell(-1, -1, 0)
-//            }
-//
-//            Lifecycle.Event.ON_DESTROY -> viewModel.pauseTimer()
-//            else -> {}
-//        }
-//    }
+    )
 }
 
 @Composable
@@ -318,15 +370,8 @@ fun TopBoardSection(
     }
 }
 
-//@Preview()
-//@Composable
-//fun PreviewScreen() {
-//    val sudokuParser = SudokuParser()
-//    sudokuParser.
-//    SudokuTheme {
-//        Surface {
-//            DrawGameBoard(
-//            )
-//        }
-//    }
-//}
+@Preview
+@Composable
+fun PreviewScreen() {
+    SudokuTheme {}
+}

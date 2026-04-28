@@ -92,13 +92,11 @@ class GameViewModel @Inject constructor(
     private lateinit var initialBoard: List<List<Cell>>
 
     var solvedBoard = emptyList<List<Cell>>()
-//    var cages by mutableStateOf(emptyList<Cage>())
 
     var size by mutableIntStateOf(9)
     var notesToggled by mutableStateOf(false)
     var notes by mutableStateOf(emptyList<Any>())
     var gameBoard by mutableStateOf(List(9) { row -> List(9) { col -> Cell(row, col, 0) } })
-//    val timerEnabled = appSettingsManager.timerEnabled
 
     var gameType by mutableStateOf(Classic9x9)
     var gameDifficulty by mutableStateOf(Difficulty.EASY)
@@ -176,6 +174,12 @@ class GameViewModel @Inject constructor(
     fun pauseTimer() {
         gamePlaying = false
         timer.cancel()
+        if (gameBoard.any { it.any { cell -> cell.value != 0}}) {
+            viewModelScope.launch(Dispatchers.IO) {
+                saveGame()
+                Log.d("PauseTimer", "savedGame()")
+            }
+        }
     }
 
     private fun solveBoard() {
