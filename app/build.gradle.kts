@@ -56,6 +56,12 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    configurations {
+        all {
+            exclude(group = "xmlpull", module = "xmlpull")
+            exclude(group = "xpp3", module = "xpp3")
+        }
+    }
 }
 
 dependencies {
@@ -77,6 +83,7 @@ dependencies {
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.navigation.safe.args.generator)
     ksp(libs.androidx.room.compiler)
 
     ksp(libs.hiltCompiler)
@@ -87,7 +94,7 @@ dependencies {
 
     implementation(libs.kudoku.parser)
 
-testImplementation(libs.junit)
+    testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
