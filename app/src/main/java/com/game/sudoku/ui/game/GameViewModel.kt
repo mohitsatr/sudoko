@@ -11,28 +11,28 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.game.sudoku.core.PreferencesConstants
-import com.game.sudoku.core.parser.SudokuParser
-import com.game.sudoku.core.sudokuUtils.SudokuUtils
 import com.game.sudoku.data.datastore.AppSettingsManager
 import com.game.sudoku.data.datastore.model.SavedGame
 import com.game.sudoku.data.datastore.model.SudokuBoard
-import com.game.sudoku.domain.repository.BoardRepository
-import com.game.sudoku.domain.repository.SavedGameRepository
+import com.game.sudoku.domain.GameBoard
+import com.game.sudoku.domain.countNumber
+import com.game.sudoku.domain.isLocked
+import com.game.sudoku.domain.parseToGameBoard
+import com.game.sudoku.domain.setValue
 import com.game.sudoku.domain.usecase.GetBoardUseCase
+import com.game.sudoku.domain.usecase.GetSavedGameUseCase
+import com.game.sudoku.domain.usecase.SaveGameUseCase
 import com.game.sudoku.ui.core.Cell
 import com.ramcosta.composedestinations.generated.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.ilikeyourhat.kudoku.rating.Difficulty
-import io.github.ilikeyourhat.kudoku.type.Classic9x9
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.ZonedDateTime
 import java.util.Timer
-import kotlin.compareTo
 import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
@@ -42,36 +42,28 @@ import kotlin.time.toKotlinDuration
 @RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class GameViewModel @Inject constructor(
-    private val savedGameRepository: SavedGameRepository,
-    private val appSettingsManager: AppSettingsManager,
-    private val savedStateHandle: SavedStateHandle,
+    appSettingsManager: AppSettingsManager,
+    savedStateHandle: SavedStateHandle,
     private val getBoardUseCase: GetBoardUseCase,
-    private val boardRepository: BoardRepository
+    private val saveGameUseCase: SaveGameUseCase,
+    private val getSavedGameUseCase: GetSavedGameUseCase,
 ) : ViewModel() {
     init {
-        val sudokuParser = SudokuParser()
         val navArgs: GameScreenNavArgs = savedStateHandle.navArgs()
         val continueSaved = navArgs.playedBefore
 
         viewModelScope.launch(Dispatchers.IO) {
             boardEntity = getBoardUseCase(navArgs.gameUid)
-            val savedGame = savedGameRepository.get(boardEntity.uid)
-
-            withContext(Dispatchers.Main) {
-                gameType = boardEntity.type as Classic9x9
-                gameDifficulty = boardEntity.difficulty
-            }
-
+            val savedGame = getSavedGameUseCase(boardEntity.uid)
             withContext(Dispatchers.Default) {
-                initialBoard = sudokuParser.parseBoard(
-                    boardEntity.initialBoard,
-                    boardEntity.type as Classic9x9
-                ).toList()
-                initialBoard.forEach { cells ->
-                    cells.forEach { cell ->
-                        cell.locked = cell.value != 0
-                    }
-                }
+                initialBoard = parseToGameBoard(boardEntity.initialBoard)
+                gameDifficulty = boardEntity.difficulty
+
+//                initialBoard.forEach { cells ->
+//                    cells.forEach { cell ->
+//                        cell.locked = cell.value != 0
+//                    }
+//                }
             }
 
             withContext(Dispatchers.Main) {
@@ -89,19 +81,15 @@ class GameViewModel @Inject constructor(
     }
 
     private lateinit var boardEntity: SudokuBoard
-    private lateinit var initialBoard: List<List<Cell>>
+    private lateinit var initialBoard: GameBoard
 
-    var solvedBoard = emptyList<List<Cell>>()
+    var solvedBoard = GameBoard()
 
-    var size by mutableIntStateOf(9)
     var notesToggled by mutableStateOf(false)
-    var notes by mutableStateOf(emptyList<Any>())
-    var gameBoard by mutableStateOf(List(9) { row -> List(9) { col -> Cell(row, col, 0) } })
+    var gameBoard by mutableStateOf(GameBoard())
+    var size by mutableIntStateOf(gameBoard.size)
 
-    var gameType by mutableStateOf(Classic9x9)
     var gameDifficulty by mutableStateOf(Difficulty.EASY)
-
-    val mistakesCount by mutableIntStateOf(0)
 
     val mistakeLimit = appSettingsManager.mistakesLimit.stateIn(
         viewModelScope,
@@ -117,7 +105,6 @@ class GameViewModel @Inject constructor(
     )
 
     var giveUpDialog by mutableStateOf(false)
-    var showMenu by mutableStateOf(false)
 
     var showSolution by mutableStateOf(false)
 
@@ -132,13 +119,7 @@ class GameViewModel @Inject constructor(
             initialValue = 1
         )
 
-    // identical numbers highlight
-    val identicalHighlight = appSettingsManager.highlightIdentical
-
-//    private var undoRedoManager = UndoRedoManager(GameState(gameBoard, notes))
-    var currCell by mutableStateOf(Cell(-1, -1, 0))
-
-    private var sudokuUtils = SudokuUtils()
+    var currentCell by mutableStateOf(Cell(-1, -1, 0))
 
     var restartDialog by mutableStateOf(false)
     var gamePlaying by mutableStateOf(false)
@@ -160,12 +141,12 @@ class GameViewModel @Inject constructor(
                     != duration.toInt(DurationUnit.SECONDS)) {
                     timeText = duration.toFormattedString()
 
-                    if (gameBoard.any { it.any { cell -> cell.value != 0}}) {
-                        viewModelScope.launch(Dispatchers.IO) {
-                            saveGame()
-                            Log.d("StartTimer", "savedGame()")
-                        }
-                    }
+//                    if (gameBoard.any { it.any { cell -> cell.value != 0}}) {
+//                        viewModelScope.launch(Dispatchers.IO) {
+//                            saveGame()
+//                            Log.d("StartTimer", "savedGame()")
+//                        }
+//                    }
                 }
             }
         }
@@ -174,16 +155,6 @@ class GameViewModel @Inject constructor(
     fun pauseTimer() {
         gamePlaying = false
         timer.cancel()
-        if (gameBoard.any { it.any { cell -> cell.value != 0}}) {
-            viewModelScope.launch(Dispatchers.IO) {
-                saveGame()
-                Log.d("PauseTimer", "savedGame()")
-            }
-        }
-    }
-
-    private fun solveBoard() {
-
     }
 
     private fun restoreSavedGame(savedGame: SavedGame) {
@@ -191,74 +162,44 @@ class GameViewModel @Inject constructor(
         duration = savedGame.timer.toKotlinDuration()
         timeText = duration.toFormattedString()
 
-        val sudokuParser = SudokuParser()
-        gameBoard = sudokuParser.parseBoard(
-            savedGame.currentBoard,
-            gameType = boardEntity.type as Classic9x9
-        )
+        gameBoard = parseToGameBoard(savedGame.savedBoard)
 
-        for (i in gameBoard.indices) {
-            for (j in gameBoard[0].indices) {
-                gameBoard[i][j].locked = initialBoard[i][j].locked
-            }
-        }
+//        for (i in gameBoard.indices) {
+//            for (j in gameBoard[0].indices) {
+//                gameBoard[i][j].locked = initialBoard[i][j].locked
+//            }
     }
 
-    private suspend fun saveGame() {
-        val savedGame = savedGameRepository.get(boardEntity.uid)
-        val sudokuParser = SudokuParser()
-        if (savedGame != null) {
-            savedGameRepository.update(
-                savedGame.copy(
-                    timer = java.time.Duration.ofSeconds(duration.inWholeSeconds),
-                    currentBoard = sudokuParser.boardToString(gameBoard),
-                    notes = sudokuParser.notesToString(notes),
-                    lastPlayed = ZonedDateTime.now()
-                )
-            )
-            Log.d("saveGame", "Game updated: Game:${savedGame.uid} Board ${boardEntity.uid}")
-        }
-        else {
-            val game = SavedGame(
-                uid = boardEntity.uid,
-                currentBoard = sudokuParser.boardToString(gameBoard),
-                notes = sudokuParser.notesToString(notes),
-                timer = java.time.Duration.ofSeconds(duration.inWholeSeconds),
-                lastPlayed = ZonedDateTime.now(),
-            )
-            savedGameRepository.insert(game)
-            Log.d("saveGame", "Game inserted: Game:${game.uid} Board ${boardEntity.uid}")
-        }
+    private fun saveGame() {
+        val savedGame = getSavedGameUseCase(boardEntity.uid)
+        saveGameUseCase(savedGame, gameBoard, duration, boardEntity)
     }
 
     fun processInput(cell: Cell, remainingUse: Boolean, longTap: Boolean = false): Boolean {
         if (gamePlaying) {
-            currCell = if (currCell.row == cell.row && currCell.column == cell.column
+            currentCell = if (currentCell.row == cell.row && currentCell.column == cell.column
                 && digitFirstNumber == 0) {
                 Cell(-1, -1)
             } else {
                 cell
             }
-            Log.d("processInput", "currCell: $currCell")
 
-            if (currCell.row > -1 && currCell.column > -1
-                && !gameBoard[currCell.row][currCell.column].locked) {
+
+            if (currentCell.row > -1 && currentCell.column > -1 && !gameBoard.isLocked(currentCell)) {
 
                 if (inputMethod.value == 1 && digitFirstNumber > 0) {
                     if (!longTap) {
                         if (remainingUsesList.size >= digitFirstNumber
                             && remainingUsesList[digitFirstNumber - 1] > 0 || !remainingUse) {
                             processNumberInput(digitFirstNumber)
-//                            undoRedoManager.
                             if (notesToggled) {
-                                currCell = Cell(currCell.row, currCell.column,
+                                currentCell = Cell(currentCell.row, currentCell.column,
                                     digitFirstNumber)
                             }
                         }
                     }
-                    else if (!currCell.locked) {
-                        gameBoard = setValueCell(0)
-                        // setNote
+                    else if (!currentCell.locked) {
+                        gameBoard.setValue(currentCell.row, currentCell.column, 0)
                     }
                 }
                 remainingUsesList = countRemainingUses(gameBoard)
@@ -272,68 +213,58 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    private fun getBoardNoRef(): List<List<Cell>> =
-        gameBoard.map { items -> items.map { item -> item.copy() } }
+//    private fun getBoardNoRef(): List<List<Cell>> =
+//        gameBoard.map { items -> items.map { item -> item.copy() } }
 
-    private fun setValueCell(
-        value: Int,
-        row : Int = currCell.row,
-        col : Int = currCell.column
-    ): List<List<Cell>> {
-        var new = getBoardNoRef()
-
-        new[row][col].value = value
-        remainingUsesList = countRemainingUses(new)
-
-        if (currCell.row == row && currCell.column == col) {
-            currCell = currCell.copy(value = new[row][col].value)
-        }
-
-        if (value == 0) {
-            new[row][col].error = false
-            currCell.error = false
-            return new
-        }
-
-        return new
-    }
+//    private fun setValueCell(
+//        value: Int,
+//        row : Int = currCell.row,
+//        col : Int = currCell.column
+//    ): List<List<Cell>> {
+//        var new = getBoardNoRef()
+//
+//        new[row][col].value = value
+//        remainingUsesList = countRemainingUses(new)
+//
+//        if (currCell.row == row && currCell.column == col) {
+//            currCell = currCell.copy(value = new[row][col].value)
+//        }
+//
+//        if (value == 0) {
+//            new[row][col].error = false
+//            currCell.error = false
+//            return new
+//        }
+//
+//        return new
+//    }
 
     fun processKeyboardInput(number: Int) {
 //        digitFirstNumber = number
         if (gamePlaying) {
-            if (inputMethod.value == 0 && !currCell.locked && currCell.column >= 0
-                && currCell.row >= 0) {
+            if (inputMethod.value == 0 && !currentCell.locked && currentCell.column >= 0
+                && currentCell.row >= 0) {
 //              overrideInputMethodDF = false
                 digitFirstNumber = 0
                 processNumberInput(number)
 //              undoRedoManager.addState(GameState(gameBoard, notes))
             } else if (inputMethod.value == 1) {
                 digitFirstNumber = if (digitFirstNumber == number) 0 else number
-                currCell = Cell(-1, -1, digitFirstNumber)
+                currentCell = Cell(-1, -1, digitFirstNumber)
             }
         }
 //            eraseButtonToggled = false
     }
 
-    private fun countRemainingUses(board: List<List<Cell>>): MutableList<Int> {
-        val uses = mutableListOf<Int>()
-
-        for (i in 0..size) {
-            uses.add(size - sudokuUtils.countNumberInBoard(board, i + 1))
-        }
-        return uses
+    private fun countRemainingUses(board: GameBoard): List<Int> {
+        val uses = listOf<Int>()
+        return uses.map { x-> size - board.countNumber(x + 1) }
     }
 
     private fun processNumberInput(number: Int) {
-        if (currCell.row > -1 && currCell.column > -1 && gamePlaying && !currCell.locked) {
-            if (!notesToggled) {
-                gameBoard = setValueCell(
-                    if (gameBoard[currCell.row][currCell.column].value == number) 0 else number
-                )
-            } else {
-                gameBoard = setValueCell(0)
-                remainingUsesList = countRemainingUses(gameBoard)
-            }
+        if (currentCell.row > -1 && currentCell.column > -1 && gamePlaying && !currentCell.locked) {
+            gameBoard.setValue(currentCell.row, currentCell.column, number)
+            remainingUsesList = countRemainingUses(gameBoard)
         }
     }
 }

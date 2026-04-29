@@ -99,7 +99,7 @@ fun GameScreen(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_PAUSE) {
                 viewModel.pauseTimer()
-                viewModel.currCell = Cell(-1, -1, 0)
+                viewModel.currentCell = Cell(-1, -1, 0)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -120,12 +120,12 @@ fun GameScreen(
         showSolution = viewModel.showSolution,
         unSolvedBoard = viewModel.gameBoard,
         solvedBoard = viewModel.solvedBoard,
-        curCell = viewModel.currCell,
+        curCell = viewModel.currentCell,
         timeText = viewModel.timeText,
         onBackClick = { navigator.popBackStack() },
         onPauseButtonClick = {
             if (!viewModel.gamePlaying) viewModel.startTimer() else viewModel.pauseTimer()
-            viewModel.currCell = Cell(-1, -1, 0)
+            viewModel.currentCell = Cell(-1, -1, 0)
         },
         onRestartButtonClick = {},
         onGiveUp = {

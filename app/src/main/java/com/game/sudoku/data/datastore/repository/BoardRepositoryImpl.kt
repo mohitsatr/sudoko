@@ -10,5 +10,8 @@ import kotlinx.coroutines.flow.Flow
 class BoardRepositoryImpl(
     private val boardDao: BoardDao
 ) : BoardRepository {
+    override fun get(gameUid: Long): SudokuBoard {
+        TODO("Not yet implemented")
+    }
 
 }
