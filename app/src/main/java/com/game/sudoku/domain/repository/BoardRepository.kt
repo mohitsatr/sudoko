@@ -9,4 +9,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface BoardRepository {
 
+    fun get(gameUid: Long): SudokuBoard
 }

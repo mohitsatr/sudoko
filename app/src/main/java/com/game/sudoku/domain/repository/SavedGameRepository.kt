@@ -5,4 +5,10 @@ import com.game.sudoku.data.datastore.model.SudokuBoard
 import kotlinx.coroutines.flow.Flow
 
 interface SavedGameRepository {
+
+    fun get(boardUid: Long): SavedGame
+
+    fun insert(savedGame: SavedGame)
+
+    fun update(savedGame: SavedGame)
 }

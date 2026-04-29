@@ -69,11 +69,5 @@ class SudokuParser {
         return boardString
     }
 
-    fun notesToString(notes: List<Any>): String {
-        return ""
-    }
 
-    companion object {
-        val EMPTY_SEPARATORS = listOf('0', '.', '-', '_')
-    }
 }
