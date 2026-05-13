@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,7 +24,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -34,6 +32,8 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.game.sudoku.LocalBoardColors
+import com.game.sudoku.domain.GameBoard
+import com.game.sudoku.domain.GameBoard.Companion.parseToGameBoard
 import com.game.sudoku.ui.components.board.drawPositionLines
 import com.game.sudoku.ui.core.Cell
 import com.game.sudoku.ui.theme.SudokuBoardColors.SudokuBoardColors
@@ -46,7 +46,7 @@ import kotlin.math.sqrt
 @Composable
 fun DrawGameBoard(
     modifier: Modifier = Modifier,
-    board: List<List<Cell>>,
+    board: GameBoard,
     size: Int = board.size,
     mainTextSize: TextUnit = when (size) {
         6 -> 32.sp
@@ -55,24 +55,17 @@ fun DrawGameBoard(
         else -> 14.sp
     },
     autoFontSize: Boolean = false,
-    notes: Any? = null,
     selectedCell: Cell,
     onClick: (Cell) -> Unit,
-    onLongClick: (Cell) -> Unit = { },
     identicalNumbersHighlight: Boolean = true,
     errorsHighlight: Boolean = true,
     positionLines: Boolean = true,
-    notesToHighLight: List<String> = emptyList(),
     enabled: Boolean = true,
     questions: Boolean = false,
-    renderNotes: Boolean = true,
-    zoomable: Boolean = false,
-//    boardColors: SudokuBoardColors = LocalBoardColors.current,
-    crossHighlight: Boolean = false,
     cellsToHighLight: List<Cell>? = null,
     boardColors: SudokuBoardColors = LocalBoardColors.current,
 ) {
-    BoxWithConstraints ( modifier = modifier
+    BoxWithConstraints (modifier = modifier
         .fillMaxWidth()
         .aspectRatio(1f)
         .padding(4.dp)
@@ -97,12 +90,12 @@ fun DrawGameBoard(
                         val row =
                             floor((totalOffset.y) / cellSize)
                                 .toInt()
-                                .coerceIn(board.indices)
+                                .coerceIn(0, board.size)
                         val column =
                             floor((totalOffset.x) / cellSize)
                                 .toInt()
-                                .coerceIn(board.indices)
-                        onClick(board[row][column])
+                                .coerceIn(0, board.size)
+                        onClick(board.getCell(row, column))
                     }
                 )
             }
@@ -172,23 +165,13 @@ fun DrawGameBoard(
             )
         }
 
-        val dashOnInterval = (cellSize * 2)
-        val dashIntervalOff = (cellSize/2)
-
-        val pathEffect = PathEffect.dashPathEffect(
-            intervals = floatArrayOf(dashOnInterval, dashIntervalOff),
-            phase = 5f
-        )
-
-        // Log.d("selectedCell", "$selectedCell")
-         Log.d("cellSize", "$cellSize")
+        Log.d("cellSize", "$cellSize")
         Canvas(modifier = boardModifier) {
             val cornerRadius = CornerRadius(15f, 15f)
             val clickOffset  = Offset(
                 x = selectedCell.column * cellSize,
                 y = selectedCell.row * cellSize
             )
-            Log.d("clickOffset", "$clickOffset")
             if (selectedCell.row >= 0 && selectedCell.column >= 0) {
                 // current cell
                 drawRoundCell(
@@ -207,7 +190,7 @@ fun DrawGameBoard(
                         row = selectedCell.row,
                         col = selectedCell.column,
                         gameSize = size,
-                        color = nonSelectedHighlightColor ,
+                        color = Color.Green,
                         cellSize = cellSize,
                         lineLength = maxWidth,
                         cornerRadius = cornerRadius
@@ -218,7 +201,7 @@ fun DrawGameBoard(
             // non-selected bubble around numbers
             for (i in 0 until size) {
                 for (j in 0 until size) {
-                    val currentCell = board[i][j]
+                    val currentCell = board.getCell(i, j)
                     if (currentCell.locked) {
                         drawRoundCell(
                             row = currentCell.row,
@@ -230,7 +213,7 @@ fun DrawGameBoard(
                                     y = currentCell.row * cellSize),
                                 size = Size(cellSize, cellSize)
                             ),
-                            color = nonSelectedHighlightColor
+                            color = Color.Red
                         )
                     }
                 }
@@ -238,7 +221,7 @@ fun DrawGameBoard(
             if (identicalNumbersHighlight) {
                 for (i in 0 until size) {
                     for (j in 0 until size) {
-                        val currentCell = board[i][j]
+                        val currentCell = board.getCell(i, j)
                         if (currentCell.value == selectedCell.value && currentCell.value != 0) {
                             drawRoundCell(
                                 row = currentCell.row,
@@ -298,7 +281,6 @@ fun DrawGameBoard(
                 }
             }
 
-
             drawNumbers(
                 size = size,
                 board = board,
@@ -314,100 +296,26 @@ fun DrawGameBoard(
     }
 }
 
-@Preview(backgroundColor = 0x000000, showBackground = true)
+
+const val fakeGameString = "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
+val fakeGameBoard = parseToGameBoard(fakeGameString)
+
+@Preview
 @Composable
-private fun BoardPreviewLight() {
+fun GameBoardPreview() {
+    val emptyBoard = GameBoard()
+    val cell0 = Cell(0, 0, 1, locked = true)
+    val cell1 = Cell(0, 1, 2, locked = true)
+    emptyBoard.setValue(cell0)
+    emptyBoard.setValue(cell1)
+    emptyBoard.setValue(0, 2, 3)
+    emptyBoard.setValue(0, 3, 4)
     SudokuTheme {
-        Surface {
-            BoxWithConstraints(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .padding(4.dp)
-            ) {
-                val size = 9
-                val maxWidth = constraints.maxWidth.toFloat()
-                val thickLineWidth = with(LocalDensity.current) { 1.3.dp.toPx() }
-                val thinLineWidth = with(LocalDensity.current) { 1.3.dp.toPx() }
-
-                // single cell size
-                val cellSize by remember(size) { mutableFloatStateOf(maxWidth / size.toFloat()) }
-                val boardModifier = Modifier
-
-                val boardColors = LocalBoardColors.current
-
-                val errorColor = boardColors.errorColor
-                val thickLineColor = boardColors.thickLineColor
-                val thinLineColor = boardColors.thinLineColor
-                val foregroundColor = boardColors.boardBackgroundColor
-                val altForegroundColor = boardColors.altForegroundColor
-                val highlightColor = boardColors.nonSelectedHighlightColor
-
-                val vertThick by remember(size) { mutableIntStateOf(floor(sqrt(size.toFloat())).toInt()) }
-                val horThick by remember(size) { mutableIntStateOf(ceil(sqrt(size.toFloat())).toInt()) }
-                var fontSizePx by remember { mutableFloatStateOf(1f) }
-
-                with(LocalDensity.current) {
-//                    LaunchedEffect(autoFontSize, size, mainTextSize) {
-//                        fontSizePx = if (autoFontSize) {
-//                            (cellSize * 0.9f).toSp().toPx()
-//                        } else {
-//                            mainTextSize.toPx()
-//                        }
-//                    }
-                }
-
-                val dashOnInterval = (cellSize + 200)
-                val dashIntervalOff = (cellSize - 60)
-
-                val pathEffect = PathEffect.dashPathEffect(
-                    intervals = floatArrayOf(dashOnInterval, dashIntervalOff),
-                    phase = 0f
-                )
-
-                val pathEffectHorizontal = PathEffect.dashPathEffect(
-                    intervals = floatArrayOf(cellSize, cellSize - 100),
-                    phase = 20f
-                )
-
-                Canvas(modifier = boardModifier) {
-                    val cornerRadius = CornerRadius(15f, 15f)
-
-                    // horizontal lines
-                    for (i in 1 until size) {
-                        drawLine(
-                            color = if (i % 3 == 0) Color.Black else Color.Gray,
-                            start = Offset(cellSize * i.toFloat(), 0f),
-                            end = Offset(cellSize * i.toFloat(), maxWidth),
-                            strokeWidth = if (i % 3 == 0) thickLineWidth else thinLineWidth
-                        )
-                    }
-
-                    // vertical
-                    for (i in 1 until size) {
-                        if (maxWidth >= cellSize * i) {
-                            drawLine(
-                                color = if (i % 3 == 0) Color.Black else Color.Gray,
-                                start = Offset(0f, cellSize * i.toFloat()),
-                                end = Offset(maxWidth, cellSize * i.toFloat()),
-                                strokeWidth = if (i % 3 == 0) thickLineWidth else thinLineWidth
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        DrawGameBoard(
+            board = fakeGameBoard,
+            size = 9,
+            selectedCell = Cell(0, 0, 3),
+            onClick = {},
+        )
     }
 }
-//Hi Alexey Andreev,
-//
-//I'd like to express my interesting on working on TeaVM. I'm really interested in Compilers, VMs and WebAssembly. I found TeaVM really interesting and thought I'd a great starting point in exploring my interests further, but I was put off by lack of interactions among community and lot of stale PRs.
-//
-//Now it looks like the perfect time to get involved. I contribute to Checkstyle and have experience with static analysis and very little with writing language Grammer.
-//
-//> This should not be necessarily much in terms time or functionality, but what important is working regularly and long-term
-//
-//As of late, I have many things going on in my life and will be like this for till April(I'll be graduated then) but I can spend around 2 hours on TeaVM per week. Once I get my life back, I can spend more time on the project.
-//
-//Could you let me a good starting point ?
-//Looking forward to improving TeaVM.

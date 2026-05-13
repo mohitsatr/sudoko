@@ -8,5 +8,5 @@ class GetSavedGameUseCase @Inject constructor(
     val savedGameRepository: SavedGameRepository
 ) {
 
-    operator fun invoke(boardUid: Long): SavedGame = savedGameRepository.get(boardUid)
+    operator fun invoke(boardUid: Long): SavedGame? = savedGameRepository.get(boardUid)
 }

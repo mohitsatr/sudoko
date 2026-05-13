@@ -13,12 +13,9 @@ import androidx.lifecycle.viewModelScope
 import com.game.sudoku.core.PreferencesConstants
 import com.game.sudoku.data.datastore.AppSettingsManager
 import com.game.sudoku.data.datastore.model.SavedGame
-import com.game.sudoku.data.datastore.model.SudokuBoard
+import com.game.sudoku.data.datastore.model.SudokuBoardModel
 import com.game.sudoku.domain.GameBoard
-import com.game.sudoku.domain.countNumber
-import com.game.sudoku.domain.isLocked
-import com.game.sudoku.domain.parseToGameBoard
-import com.game.sudoku.domain.setValue
+import com.game.sudoku.domain.GameBoard.Companion.parseToGameBoard
 import com.game.sudoku.domain.usecase.GetBoardUseCase
 import com.game.sudoku.domain.usecase.GetSavedGameUseCase
 import com.game.sudoku.domain.usecase.SaveGameUseCase
@@ -80,7 +77,7 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    private lateinit var boardEntity: SudokuBoard
+    private lateinit var boardEntity: SudokuBoardModel
     private lateinit var initialBoard: GameBoard
 
     var solvedBoard = GameBoard()
@@ -257,8 +254,7 @@ class GameViewModel @Inject constructor(
     }
 
     private fun countRemainingUses(board: GameBoard): List<Int> {
-        val uses = listOf<Int>()
-        return uses.map { x-> size - board.countNumber(x + 1) }
+        return (1..9).map { x -> size - board.countNumber(x + 1) }
     }
 
     private fun processNumberInput(number: Int) {

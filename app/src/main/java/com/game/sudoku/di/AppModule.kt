@@ -9,8 +9,8 @@ import com.game.sudoku.data.datastore.dao.BoardDao
 import com.game.sudoku.data.datastore.dao.SavedGameDao
 import com.game.sudoku.domain.repository.BoardRepository
 import com.game.sudoku.data.datastore.repository.BoardRepositoryImpl
-import com.game.sudoku.domain.repository.SavedGameRepository
 import com.game.sudoku.data.datastore.repository.SavedGameRepositoryImpl
+import com.game.sudoku.domain.repository.SavedGameRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

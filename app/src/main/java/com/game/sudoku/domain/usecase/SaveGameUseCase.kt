@@ -4,7 +4,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.game.sudoku.data.datastore.model.SavedGame
-import com.game.sudoku.data.datastore.model.SudokuBoard
+import com.game.sudoku.data.datastore.model.SudokuBoardModel
 import com.game.sudoku.domain.GameBoard
 import com.game.sudoku.domain.repository.SavedGameRepository
 import java.time.ZonedDateTime
@@ -19,7 +19,7 @@ class SaveGameUseCase @Inject constructor(
         savedGame: SavedGame?,
         gameBoard: GameBoard,
         duration: Duration,
-        boardEntity: SudokuBoard
+        boardEntity: SudokuBoardModel
     ) {
         if (savedGame != null) {
             savedGameRepository.update(

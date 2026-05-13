@@ -7,7 +7,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.game.sudoku.core.parser.SudokuParser
-import com.game.sudoku.data.datastore.model.SudokuBoard
+import com.game.sudoku.data.datastore.model.SavedGame
+import com.game.sudoku.data.datastore.model.SudokuBoardModel
+import com.game.sudoku.domain.GameBoard
 import com.game.sudoku.domain.repository.BoardRepository
 import com.game.sudoku.domain.repository.SavedGameRepository
 import com.game.sudoku.ui.core.Cell
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.collections.emptyMap
 
 @HiltViewModel
 class HomeViewModel
@@ -37,22 +40,22 @@ class HomeViewModel
     var isSolving by mutableStateOf(false)
     var readyToPlay by mutableStateOf(false)
 
-    val lastGames = savedGameRepository.getLastPlayable(5)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = emptyMap()
-        )
+//    val lastGames = savedGameRepository.getLastPlayable(5)
+//        .stateIn(
+//            scope = viewModelScope,
+//            started = SharingStarted.Eagerly,
+//            initialValue =
+//        )
 
     fun startGame() {
         isSolving = false
         isGenerating = false
 
-        val puzzle = List(9) { row -> List(9) { col -> Cell(row, col, 0) } }
-        val solvedPuzzle = List(9) { row -> List(9) { col -> Cell(row, col, 0) } }
+        val initialPuzzle = GameBoard()
+        val solvedPuzzle = GameBoard()
 
-        viewModelScope.launch(Dispatchers.Default) {
-            isGenerating = true;
+        viewModelScope.launch(Dispatchers.IO) {
+            isGenerating = true
             val generator = Sudoku.defaultGenerator()
             val generated = generator.generate(Classic9x9, Difficulty.EASY)
             isGenerating = false
@@ -63,22 +66,17 @@ class HomeViewModel
             isSolving = false
 
             if (solved.isSolved()) {
-                for (i in 0 until 9) {
-                    for (j in 0 until 9) {
-                        puzzle[i][j].value = generated[i, j].value
-                        solvedPuzzle[i][j].value = solved[i, j].value
-                    }
-                }
+                initialPuzzle.fill(generated)
+                solvedPuzzle.fill(solved)
+
 
                 withContext(Dispatchers.IO) {
-                    val sudokuParser = SudokuParser()
                     insertedBoardUid = boardRepository.insert(
-                        SudokuBoard(
+                        SudokuBoardModel(
                             0,
-                            initialBoard = sudokuParser.boardToString(puzzle),
-                            solvedBoard = sudokuParser.boardToString(solvedPuzzle),
+                            initialBoard = initialPuzzle.asString(),
+                            solvedBoard = solvedPuzzle.asString(),
                             difficulty = Difficulty.EASY,
-                            type = Classic9x9
                         )
                     )
                     Log.d("startGame", "$insertedBoardUid got inserted")

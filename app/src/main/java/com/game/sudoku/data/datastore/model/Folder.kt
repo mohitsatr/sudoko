@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 import java.time.ZonedDateTime
 
 @Serializable
+@Entity
 class Folder(
     @PrimaryKey(autoGenerate = true) val uid: Long,
 )

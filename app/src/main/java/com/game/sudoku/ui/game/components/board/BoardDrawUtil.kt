@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
+import com.game.sudoku.domain.GameBoard
 import com.game.sudoku.ui.core.Cell
 
 
@@ -82,7 +82,7 @@ fun roundRectForCell(
 
 fun DrawScope.drawNumbers(
     size: Int,
-    board: List<List<Cell>>,
+    board: GameBoard,
     highlightErrors: Boolean,
     errorTextPaint: Paint,
     nonSelectedHighlightPaint: Paint,
@@ -94,24 +94,22 @@ fun DrawScope.drawNumbers(
     drawIntoCanvas { canvas ->
         for (i in 0 until size) {
             for (j in 0 until size) {
-                val isSelected = board[i][j].value == selectedCell.value && selectedCell.value != 0
+                val isSelected = board.getValue(i, j) == selectedCell.value && selectedCell.value != 0
 
-                if (board[i][j].value != 0) {
+                if (board.getValue(i, j) != 0) {
                     val paint = when {
                         isSelected -> selectedHighlightPaint
                         else -> nonSelectedHighlightPaint
                     }
                     val textToDraw =
-                        if (questions) "?" else board[i][j].value.toString(16).uppercase()
-
-                    Log.d("texttodraw", textToDraw)
+                        if (questions) "?" else board.getValue(i, j).toString(16).uppercase()
 
                     val textBounds = android.graphics.Rect()
                     selectedHighlightPaint.getTextBounds(textToDraw, 0, 1, textBounds)
                     val textWidth = paint.measureText(textToDraw)
 
-                    val x = board[i][j].column * cellSize + (cellSize - textWidth) / 2f
-                    val y = board[i][j].row * cellSize + (cellSize + textBounds.height()) / 2f
+                    val x = board.getCell(i, j).column * cellSize + (cellSize - textWidth) / 2f
+                    val y = board.getCell(i, j).row * cellSize + (cellSize + textBounds.height()) / 2f
 
                     Log.d("Text", "width=$textWidth, x=$x, y=$y")
                     Log.d("Attribute", "cellSize=$cellSize, textBound=$textBounds")
