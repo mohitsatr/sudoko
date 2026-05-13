@@ -1,17 +1,17 @@
 package com.game.sudoku.data.datastore.model
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import com.game.sudoku.domain.GameBoard
-import io.github.ilikeyourhat.kudoku.model.SudokuType
 import io.github.ilikeyourhat.kudoku.rating.Difficulty
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SudokuBoard(
+@Entity(
+    tableName = "boardModel"
+)
+data class SudokuBoardModel(
     @PrimaryKey(autoGenerate = true) val uid: Long,
     val difficulty: Difficulty,
-    val initialBoard: String
+    val initialBoard: String,
+    val solvedBoard: String
 )

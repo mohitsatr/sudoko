@@ -1,13 +1,12 @@
 package com.game.sudoku.domain.repository
 
-import com.game.sudoku.data.datastore.model.SudokuBoard
-import com.game.sudoku.ui.core.qqwing.GameDifficulty
-
-import io.github.ilikeyourhat.kudoku.model.Sudoku
-import io.github.ilikeyourhat.kudoku.rating.Difficulty
-import kotlinx.coroutines.flow.Flow
+import com.game.sudoku.data.datastore.model.SudokuBoardModel
 
 interface BoardRepository {
 
-    fun get(gameUid: Long): SudokuBoard
+    fun get(gameUid: Long): SudokuBoardModel
+
+    fun insert(sudokuBoard: SudokuBoardModel): Long
+
+    fun update(sudokuBoard: SudokuBoardModel)
 }

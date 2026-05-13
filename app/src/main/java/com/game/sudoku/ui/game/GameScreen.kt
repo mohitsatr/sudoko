@@ -52,6 +52,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.game.sudoku.R
 import com.game.sudoku.core.PreferencesConstants
+import com.game.sudoku.domain.GameBoard
+import com.game.sudoku.domain.GameBoard.Companion.parseToGameBoard
 import com.game.sudoku.ui.core.Cell
 import com.game.sudoku.ui.game.components.AnimatedNavigation
 import com.game.sudoku.ui.game.components.DefaultKeyboard
@@ -78,7 +80,7 @@ fun GameScreen(
     val restartButtonAnimation: Float by animateFloatAsState(
         targetValue = restartButtonAngleState,
         animationSpec = tween(durationMillis = 250), label = "restartButtonAnimation"
-    )
+    )1
     val mistakeLimit by viewModel.mistakeLimit.collectAsStateWithLifecycle(
         initialValue = PreferencesConstants.DEFAULT_MISTAKES_LIMIT
     )
@@ -165,8 +167,8 @@ fun GameScreenContent(
     remainingUsesList: List<Int>,
     remainingUse: Boolean,
     showSolution: Boolean,
-    unSolvedBoard: List<List<Cell>>,
-    solvedBoard: List<List<Cell>>,
+    unSolvedBoard: GameBoard,
+    solvedBoard: GameBoard,
     curCell: Cell,
     timeText: String
 ) {
@@ -248,18 +250,12 @@ fun GameScreenContent(
                     modifier = Modifier
                         .scale(boardScale, boardScale),
                     board = if (!showSolution) unSolvedBoard else solvedBoard,
-                    notes = null,
                     selectedCell = curCell,
                     onClick = onCellClick,
-                    onLongClick = {},
                     identicalNumbersHighlight = true,
                     errorsHighlight = errorHighlight != 0,
                     positionLines = false,
-                    notesToHighLight = emptyList(),
-                    enabled = isGameRunning && !hasGameEnded,
-                    renderNotes = false,
-                    zoomable = false,
-                    crossHighlight = false,
+                    enabled = true,
                     cellsToHighLight = null
                 )
             }
@@ -370,8 +366,34 @@ fun TopBoardSection(
     }
 }
 
+
+const val fakeGameString = "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
+val fakeGameBoard = parseToGameBoard(fakeGameString)
+
 @Preview
 @Composable
 fun PreviewScreen() {
-    SudokuTheme {}
+    SudokuTheme {
+        GameScreenContent(
+            isGameRunning = true,
+            hasGameEnded = false,
+            boardSize = 9,
+            onBackClick = {},
+            onPauseButtonClick = {},
+            onRestartButtonClick = {},
+            onGiveUp = {},
+            onKeyboardClick = {},
+            onCellClick = {},
+            difficultyLevel = "Easy",
+            mistakeLimit = true,
+            errorHighlight = 1,
+            remainingUsesList = emptyList(),
+            remainingUse = true,
+            showSolution = false,
+            unSolvedBoard = fakeGameBoard,
+            solvedBoard = fakeGameBoard,
+            curCell = Cell(0, 0, 0),
+            timeText = "0:0",
+        )
+    }
 }

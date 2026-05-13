@@ -14,12 +14,11 @@ import com.game.sudoku.data.datastore.dao.FolderDao
 import com.game.sudoku.data.datastore.dao.SavedGameDao
 import com.game.sudoku.data.datastore.model.Folder
 import com.game.sudoku.data.datastore.model.SavedGame
-import com.game.sudoku.data.datastore.model.SudokuBoard
-import com.game.sudoku.ui.core.qqwing.GameDifficulty
+import com.game.sudoku.data.datastore.model.SudokuBoardModel
 
 @Database(
-    entities = [SavedGame::class, SudokuBoard::class, Folder::class],
-    version = 2 ,
+    entities = [SavedGame::class, SudokuBoardModel::class, Folder::class],
+    version = 3 ,
     autoMigrations = []
 )
 @TypeConverters(

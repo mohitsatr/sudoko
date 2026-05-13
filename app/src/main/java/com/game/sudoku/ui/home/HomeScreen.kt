@@ -38,6 +38,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.GameScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlin.collections.emptyMap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnrememberedMutableState")
@@ -51,8 +52,8 @@ fun HomeScreen(
     Log.d("rop", viewModel.readyToPlay.toString())
 
     var continueLastGame by remember { mutableStateOf(false) }
-    val lastGames = viewModel.lastGames.collectAsStateWithLifecycle(emptyMap())
-    val lastGamesSize = lastGames.value.size
+//    val lastGames = viewModel.lastGames.collectAsStateWithLifecycle(emptyMap())
+//    val lastGamesSize = lastGames.value.size
 
 //    val lastGames1 by viewModel.lastGames.collectAsStateWithLifecycle(initialValue = emptyMap())
 
@@ -89,32 +90,32 @@ fun HomeScreen(
             }
         }
 
-        if (continueLastGame) {
-            ModalBottomSheet(
-                onDismissRequest = { continueLastGame = false },
-            ) {
-                Text("Showing last $ games")
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(lastGames.value.toList()) {
-                        Button(
-                            onClick = {
-                                navigator.navigate(
-                                    GameScreenDestination(
-                                        gameUid = it.first.uid,
-                                        playedBefore = true
-                                    )
-                                )
-                                continueLastGame = false
-                            }
-                        ) {
-                            Text(text = "Last Played: ${it.first.lastPlayed.toString()} for ${it.first.timer} in ${it.second.difficulty.name} mode")
-                        }
-                    }
-                }
-            }
-        }
+//        if (continueLastGame) {
+//            ModalBottomSheet(
+//                onDismissRequest = { continueLastGame = false },
+//            ) {
+//                Text("Showing last $ games")
+//                LazyColumn(
+//                    verticalArrangement = Arrangement.spacedBy(12.dp)
+//                ) {
+//                    items(2) {
+//                        Button(
+//                            onClick = {
+//                                navigator.navigate(
+//                                    GameScreenDestination(
+//                                        gameUid = it.first.uid,
+//                                        playedBefore = true
+//                                    )
+//                                )
+//                                continueLastGame = false
+//                            }
+//                        ) {
+////                            Text(text = "Last Played: ${it.first.lastPlayed.toString()} for ${it.first.timer} in ${it.second.difficulty.name} mode")
+//                        }
+//                    }
+//                }
+//            }
+//        }
         if (viewModel.isGenerating || viewModel.isSolving) {
             GeneratingDialog(
                 onDismiss = {},

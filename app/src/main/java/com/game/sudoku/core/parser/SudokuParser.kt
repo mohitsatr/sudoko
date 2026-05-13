@@ -1,5 +1,6 @@
 package com.game.sudoku.core.parser
 
+import com.game.sudoku.domain.GameBoard.Companion.EMPTY_SEPARATORS
 import com.game.sudoku.ui.core.Cell
 import io.github.ilikeyourhat.kudoku.type.Classic9x9
 

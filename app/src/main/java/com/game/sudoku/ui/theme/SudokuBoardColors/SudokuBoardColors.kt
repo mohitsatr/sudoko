@@ -66,7 +66,7 @@ interface SudokuBoardColors {
 }
 
 class SudokuBoardColorsImpl (
-    override val boardBackgroundColor: Color = Color.White,
+    override val boardBackgroundColor: Color = Color.Green,
     override val thickLineColor: Color = Color.White,
     override val thinLineColor: Color = Color.White,
     override val altForegroundColor: Color = Color.White,
