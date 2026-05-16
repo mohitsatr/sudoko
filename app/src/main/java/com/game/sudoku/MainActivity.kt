@@ -30,7 +30,7 @@ import com.game.sudoku.data.datastore.ThemeSettingsManager
 import com.game.sudoku.ui.components.NavigationBarComponent
 import com.game.sudoku.ui.home.HomeViewModel
 import com.game.sudoku.ui.theme.SudokuBoardColors.BoardColors
-import com.game.sudoku.ui.theme.SudokuBoardColors.SudokuBoardColorsImpl
+import com.game.sudoku.ui.theme.SudokuBoardColors.LightThemeSudokuBoardColorsImpl
 import com.game.sudoku.ui.theme.SudokuTheme
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.generated.NavGraphs
@@ -40,7 +40,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 
-val LocalBoardColors = staticCompositionLocalOf { SudokuBoardColorsImpl() }
+val LocalBoardColors = staticCompositionLocalOf { LightThemeSudokuBoardColorsImpl() }
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -92,19 +92,19 @@ class MainActivity : ComponentActivity() {
 //
                 val monetSudokuBoard = PreferencesConstants.DEFAULT_MONET_SUDOKU_BOARD
 //
-                val boardColors =
-                        SudokuBoardColorsImpl(
-                            boardBackgroundColor = BoardColors.boardBackgroundColor,
-                            notesColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
-                            altForegroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            errorColor = BoardColors.errorColor,
-                            nonSelectedHighlightColor = BoardColors.nonSelectedHighlightColor,
-                            nonSelectedHighlightTextColor = BoardColors.nonSelectedHighlightTextColor,
-                            selectedHighlightColor = BoardColors.selectedHighlightColor,
-                            selectedHighlightTextColor = BoardColors.selectedHighlightTextColor,
-                            thickLineColor = BoardColors.thickLineColor,
-                            thinLineColor = BoardColors.thinLineColor
-                        )
+                val boardColors = LightThemeSudokuBoardColorsImpl(
+                    backgroundColor = BoardColors.boardBackgroundColor,
+                    notesColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                    altForegroundColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    errorColor = BoardColors.errorColor,
+                    nonSelectedBubbleColor = BoardColors.nonSelectedHighlightColor,
+                    nonSelectedNumberColor = BoardColors.nonSelectedHighlightTextColor,
+                    selectedBubbleColor = BoardColors.selectedHighlightColor,
+                    selectedNumberColor = BoardColors.selectedHighlightTextColor,
+                    thickLineColor = BoardColors.thickLineColor,
+                    thinLineColor = BoardColors.thinLineColor
+                )
+
                 CompositionLocalProvider(LocalBoardColors provides boardColors) {
                     Scaffold(
                         bottomBar = {

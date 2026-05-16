@@ -53,29 +53,48 @@ object BoardColors {
         ).copy(alpha = 0.85f)
 }
 interface SudokuBoardColors {
-    val boardBackgroundColor: Color
+    val backgroundColor: Color
     val altForegroundColor: Color
     val thickLineColor : Color
     val thinLineColor: Color
     val errorColor: Color
-    val nonSelectedHighlightColor: Color
-    val nonSelectedHighlightTextColor : Color
-    val selectedHighlightColor: Color
-    val selectedHighlightTextColor: Color
+    val nonSelectedBubbleColor: Color
+    val selectedBubbleColor: Color
+    val emptyBubbleColor: Color
+
+    val nonSelectedNumberColor : Color
+    val selectedNumberColor: Color
+
+
+    val nonSelectedKeywordBackgroundColor: Color
+    val nonSelectedKeywordNumberColor: Color
+
+    val selectedKeywordBackgroundColor: Color
+    val selectedKeywordNumberColor: Color
+
     val notesColor: Color
 }
 
-class SudokuBoardColorsImpl (
-    override val boardBackgroundColor: Color = Color.Green,
-    override val thickLineColor: Color = Color.White,
-    override val thinLineColor: Color = Color.White,
+class LightThemeSudokuBoardColorsImpl (
+    override val backgroundColor: Color = Color(0xFFF9F9F9),
+    override val thickLineColor: Color = Color(0xFFA89D79),
+    override val thinLineColor: Color = Color(0xFFDFDFDF),
+
     override val altForegroundColor: Color = Color.White,
     override val errorColor: Color = Color.White,
-    override val nonSelectedHighlightColor: Color = Color.White,
+
+    override val nonSelectedBubbleColor: Color = Color(0xFFE6E6E6),
+    override val selectedBubbleColor: Color = Color(0xFFBAB6A8),
+    override val emptyBubbleColor: Color = Color(0xFFA89D77),
+
     override val notesColor: Color = Color.White,
-    override val nonSelectedHighlightTextColor: Color = Color.White,
-    override val selectedHighlightColor: Color = Color.White,
-    override val selectedHighlightTextColor: Color = Color.White
+    override val nonSelectedNumberColor: Color = Color(0xFFA1A1A1),
+    override val selectedNumberColor: Color = backgroundColor,
+
+    override val nonSelectedKeywordBackgroundColor: Color = backgroundColor,
+    override val nonSelectedKeywordNumberColor: Color = nonSelectedNumberColor,
+    override val selectedKeywordBackgroundColor: Color = thickLineColor,
+    override val selectedKeywordNumberColor: Color = backgroundColor
 ) : SudokuBoardColors
 
 //class SudokuBoardColorsTheme1Impl (

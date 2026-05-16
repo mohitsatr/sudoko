@@ -80,7 +80,7 @@ fun GameScreen(
     val restartButtonAnimation: Float by animateFloatAsState(
         targetValue = restartButtonAngleState,
         animationSpec = tween(durationMillis = 250), label = "restartButtonAnimation"
-    )1
+    )
     val mistakeLimit by viewModel.mistakeLimit.collectAsStateWithLifecycle(
         initialValue = PreferencesConstants.DEFAULT_MISTAKES_LIMIT
     )
@@ -213,9 +213,7 @@ fun GameScreenContent(
                             )
                         )
                     }
-//                    val timerEnabled by viewModel.timerEnabled.collectAsStateWithLifecycle(
-//                        initialValue = PreferencesConstants.DEFAULT_SHOW_TIMER
-//                    )
+
                     val timerEnabled = true
                     AnimatedVisibility(visible = timerEnabled || hasGameEnded) {
                         TopBoardSection(timeText)
@@ -249,12 +247,11 @@ fun GameScreenContent(
                 DrawGameBoard(
                     modifier = Modifier
                         .scale(boardScale, boardScale),
-                    board = if (!showSolution) unSolvedBoard else solvedBoard,
+                    board = unSolvedBoard,
                     selectedCell = curCell,
                     onClick = onCellClick,
                     identicalNumbersHighlight = true,
                     errorsHighlight = errorHighlight != 0,
-                    positionLines = false,
                     enabled = true,
                     cellsToHighLight = null
                 )
@@ -372,11 +369,11 @@ val fakeGameBoard = parseToGameBoard(fakeGameString)
 
 @Preview
 @Composable
-fun PreviewScreen() {
+fun GameScreenPreview() {
     SudokuTheme {
         GameScreenContent(
-            isGameRunning = true,
-            hasGameEnded = false,
+            isGameRunning = false,
+            hasGameEnded = true,
             boardSize = 9,
             onBackClick = {},
             onPauseButtonClick = {},
