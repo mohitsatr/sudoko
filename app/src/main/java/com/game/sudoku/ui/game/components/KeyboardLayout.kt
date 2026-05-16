@@ -1,7 +1,6 @@
 package com.game.sudoku.ui.game.components
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.copy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -9,16 +8,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,9 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.game.sudoku.LocalBoardColors
@@ -93,10 +84,10 @@ fun DefaultKeyboard(
                         null
                     },
                     selected = selected == number,
-                    onSelectedTextColor = keyboardColors.selectedHighlightTextColor,
-                    nonSelectedTextColor = keyboardColors.nonSelectedHighlightTextColor,
-                    onSelectedBackgroundColor = keyboardColors.selectedHighlightColor,
-                    boardBackgroundColor = keyboardColors.boardBackgroundColor,
+                    onSelectedTextColor = keyboardColors.selectedNumberColor,
+                    nonSelectedTextColor = keyboardColors.nonSelectedNumberColor,
+                    onSelectedBackgroundColor = keyboardColors.selectedBubbleColor,
+                    boardBackgroundColor = keyboardColors.backgroundColor,
                     buttonOutlineColor = keyboardColors.thickLineColor
                 )
             }
@@ -127,10 +118,10 @@ fun DefaultKeyboard(
                         null
                     },
                     selected = selected == number,
-                    onSelectedTextColor = keyboardColors.selectedHighlightTextColor,
-                    nonSelectedTextColor = keyboardColors.nonSelectedHighlightTextColor,
-                    onSelectedBackgroundColor = keyboardColors.selectedHighlightColor,
-                    boardBackgroundColor = keyboardColors.boardBackgroundColor,
+                    onSelectedTextColor = keyboardColors.selectedNumberColor,
+                    nonSelectedTextColor = keyboardColors.nonSelectedNumberColor,
+                    onSelectedBackgroundColor = keyboardColors.selectedBubbleColor,
+                    boardBackgroundColor = keyboardColors.backgroundColor,
                     buttonOutlineColor = keyboardColors.thickLineColor
                 )
             }
@@ -138,10 +129,10 @@ fun DefaultKeyboard(
                 modifier = itemModifier
                     .weight(1f),
                 number = "X",
-                onSelectedTextColor = keyboardColors.selectedHighlightTextColor,
-                nonSelectedTextColor = keyboardColors.nonSelectedHighlightTextColor,
-                onSelectedBackgroundColor = keyboardColors.selectedHighlightColor,
-                boardBackgroundColor = keyboardColors.boardBackgroundColor,
+                onSelectedTextColor = keyboardColors.selectedNumberColor,
+                nonSelectedTextColor = keyboardColors.nonSelectedNumberColor,
+                onSelectedBackgroundColor = keyboardColors.selectedBubbleColor,
+                boardBackgroundColor = keyboardColors.backgroundColor,
                 buttonOutlineColor = keyboardColors.thickLineColor,
                 onClick = {},
                 selected = false
