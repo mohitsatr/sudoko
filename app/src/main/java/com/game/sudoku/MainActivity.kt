@@ -108,11 +108,11 @@ class MainActivity : ComponentActivity() {
                 CompositionLocalProvider(LocalBoardColors provides boardColors) {
                     Scaffold(
                         bottomBar = {
-                            NavigationBarComponent(
-                                navController = navController,
-                                isVisible = bottomBarStack,
-                                updateAvailable = false
-                            )
+//                            NavigationBarComponent(
+//                                navController = navController,
+//                                isVisible = bottomBarStack,
+//                                updateAvailable = false
+//                            )
                         },
                         contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp)
                     ) { paddingValues ->

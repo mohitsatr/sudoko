@@ -4,7 +4,6 @@ import android.os.Build
 import android.util.Log
 import android.view.HapticFeedbackConstants
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -12,6 +11,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,9 +25,11 @@ import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -42,7 +44,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -50,15 +51,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.game.sudoku.LocalBoardColors
 import com.game.sudoku.R
 import com.game.sudoku.core.PreferencesConstants
 import com.game.sudoku.domain.GameBoard
 import com.game.sudoku.domain.GameBoard.Companion.parseToGameBoard
 import com.game.sudoku.ui.core.Cell
 import com.game.sudoku.ui.game.components.AnimatedNavigation
-import com.game.sudoku.ui.game.components.DefaultKeyboard
+import com.game.sudoku.ui.game.components.GameKeyboard
 import com.game.sudoku.ui.game.components.GameMenu
 import com.game.sudoku.ui.game.components.board.DrawGameBoard
+import com.game.sudoku.ui.game.components.board.fakeBoardColors
 import com.game.sudoku.ui.theme.SudokuTheme
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
@@ -73,7 +76,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 fun GameScreen(
     viewModel: GameViewModel = hiltViewModel(),
-    navigator: DestinationsNavigator
+    navigator: DestinationsNavigator,
 ) {
     val localView = LocalView.current // for vibration
     var restartButtonAngleState by remember { mutableFloatStateOf(0f) }
@@ -170,7 +173,7 @@ fun GameScreenContent(
     unSolvedBoard: GameBoard,
     solvedBoard: GameBoard,
     curCell: Cell,
-    timeText: String
+    timeText: String,
 ) {
     val boardScale by animateFloatAsState(
         targetValue = if (isGameRunning || hasGameEnded) 1f else 0.90f,
@@ -182,7 +185,8 @@ fun GameScreenContent(
             GameHeader(
                 isGameRunning = isGameRunning,
                 hasGameEnded = hasGameEnded,
-                onBackClick = onBackClick ,
+                onBackClick = onBackClick,
+                timerText = timeText,
                 onPauseButtonClick = onPauseButtonClick,
                 onRestartButtonClick = {},
                 onGiveUp = onGiveUp,
@@ -194,38 +198,10 @@ fun GameScreenContent(
         Column(
             modifier = Modifier
                 .padding(scaffoldPaddings)
-                .padding(horizontal = 12.dp),
-            verticalArrangement = Arrangement.SpaceEvenly,
+                .padding(horizontal = 12.dp)
+                .background(LocalBoardColors.current.backgroundColor),
         ) {
-            AnimatedVisibility(visible = !hasGameEnded) {
-                Row (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 24.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    TopBoardSection(difficultyLevel)
-                    if (mistakeLimit && errorHighlight != 0) {
-                        TopBoardSection(
-                            stringResource(
-                                id = R.string.mistakes_number_out_of, 3
-                            )
-                        )
-                    }
-
-                    val timerEnabled = true
-                    AnimatedVisibility(visible = timerEnabled || hasGameEnded) {
-                        TopBoardSection(timeText)
-                    }
-                }
-            }
-
-//          render
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp)
-            ) {
+            Box(modifier = Modifier.weight(1f)) {
                 Column(
                     modifier = Modifier.align(Alignment.Center)
                 ) {
@@ -243,7 +219,6 @@ fun GameScreenContent(
                         )
                     }
                 }
-                // viewModel.currCell is correctly being updated here.
                 DrawGameBoard(
                     modifier = Modifier
                         .scale(boardScale, boardScale),
@@ -251,25 +226,16 @@ fun GameScreenContent(
                     selectedCell = curCell,
                     onClick = onCellClick,
                     identicalNumbersHighlight = true,
-                    errorsHighlight = errorHighlight != 0,
                     enabled = true,
-                    cellsToHighLight = null
+                    cellsToHighLight = null,
                 )
             }
-            AnimatedContent(!hasGameEnded, label = "") { contentState ->
-                if (contentState) {
-                    Column (
-                        verticalArrangement = Arrangement.Bottom
-                    ) {
-                        DefaultKeyboard(
-                            size = boardSize,
-                            remainingUse = if (remainingUse) remainingUsesList else null,
-                            onClick = onKeyboardClick,
-                            selected = 0
-                        )
-                    }
-                }
-            }
+            GameKeyboard(
+                size = boardSize,
+                remainingUse = if (remainingUse) remainingUsesList else null,
+                onClick = onKeyboardClick,
+                selected = 0
+            )
         }
     }
 }
@@ -284,10 +250,18 @@ fun GameHeader(
     onRestartButtonClick: () -> Unit,
     onMenuClick: () -> Unit,
     onGameMenuDismiss: () -> Unit,
-    onGiveUp: () -> Unit
+    onGiveUp: () -> Unit,
+    timerText: String,
 ) {
     TopAppBar(
-        title = {},
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                TopBarTimer(timerText)
+            }
+        },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(
@@ -297,8 +271,7 @@ fun GameHeader(
             }
         },
         actions = {
-            AnimatedVisibility(visible = !hasGameEnded) {
-                Log.d("GP", "$isGameRunning")
+            AnimatedVisibility(visible = isGameRunning) {
                 val rotationAngle by animateFloatAsState(
                     targetValue = if (isGameRunning) 0f else 360f,
                     label = "Play/Pause game icon rotation"
@@ -317,7 +290,7 @@ fun GameHeader(
                     )
                 }
             }
-            AnimatedVisibility(visible = hasGameEnded) {
+            AnimatedVisibility(visible = isGameRunning) {
                 IconButton(onClick = onRestartButtonClick) {
                     Icon(
                         modifier = Modifier.rotate(180f),
@@ -343,14 +316,17 @@ fun GameHeader(
                     onExportClicked = {}
                 )
             }
-        }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = fakeBoardColors.backgroundColor
+        )
     )
 }
 
 @Composable
-fun TopBoardSection(
+fun TopBarTimer(
     text: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier,
@@ -363,8 +339,8 @@ fun TopBoardSection(
     }
 }
 
-
-const val fakeGameString = "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
+const val fakeGameString =
+    "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
 val fakeGameBoard = parseToGameBoard(fakeGameString)
 
 @Preview
@@ -372,7 +348,7 @@ val fakeGameBoard = parseToGameBoard(fakeGameString)
 fun GameScreenPreview() {
     SudokuTheme {
         GameScreenContent(
-            isGameRunning = false,
+            isGameRunning = true,
             hasGameEnded = true,
             boardSize = 9,
             onBackClick = {},
