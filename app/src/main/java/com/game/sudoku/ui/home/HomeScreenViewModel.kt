@@ -32,6 +32,7 @@ class HomeViewModel
 @Inject constructor(
     private val boardRepository: BoardRepository,
     private val savedGameRepository: SavedGameRepository,
+    private val toggleThemeUseCase: ToggleThemeUseCase
 ) : ViewModel() {
 
     var insertedBoardUid = -1L
@@ -40,12 +41,15 @@ class HomeViewModel
     var isSolving by mutableStateOf(false)
     var readyToPlay by mutableStateOf(false)
 
+
 //    val lastGames = savedGameRepository.getLastPlayable(5)
 //        .stateIn(
 //            scope = viewModelScope,
 //            started = SharingStarted.Eagerly,
 //            initialValue =
 //        )
+
+    fun toggleTheme() = viewModelScope.launch { toggleThemeUseCase() }
 
     fun startGame() {
         isSolving = false

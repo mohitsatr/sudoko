@@ -13,11 +13,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -103,10 +105,11 @@ fun HomeScreen(
         isContinueLastGame = continueLastGame,
         isGenerating = viewModel.isGenerating,
         isSolving = viewModel.isSolving,
-        onThemeIconClick = {}
+        onThemeIconClick = { viewModel.toggleTheme() }
     )
 }
 
+@SuppressLint("RememberInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenContent(
@@ -120,8 +123,6 @@ fun HomeScreenContent(
     resumeGame: (Long) -> Unit,
 ) {
     val localColors = LocalBoardColors.current
-
-
 
     Scaffold(
         topBar = { HomeTopBar(onThemeIconClick = onThemeIconClick) },
@@ -233,7 +234,13 @@ fun GameButton(
 fun HomeTopBar(
     onThemeIconClick: () -> Unit,
 ) {
+    val localColors = LocalBoardColors.current
+
     Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .background(localColors.backgroundColor),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -242,12 +249,9 @@ fun HomeTopBar(
         ) {
             Icon(
                 ImageVector.vectorResource(R.drawable.palette_24px),
-                tint = Color.Black,
+                tint = localColors.selectedButtonBackground,
                 modifier = Modifier.size(28.dp)
-                    .clickable(
-                        interactionSource = MutableInteractionSource(),
-                        onClick = onThemeIconClick,
-                    ),
+                    .clickable(onClick = onThemeIconClick,),
                 contentDescription = ""
             )
         }
@@ -256,11 +260,10 @@ fun HomeTopBar(
             text = stringResource(R.string.app_name),
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.headlineLarge,
-            color = Color.Black
+            color = localColors.selectedButtonBackground
         )
     }
 }
-
 
 @Composable
 fun GeneratingDialog(
