@@ -6,6 +6,8 @@ import android.os.Build.VERSION.SDK_INT
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
@@ -36,6 +38,19 @@ class ThemeSettingsManager @Inject constructor(@ApplicationContext context : Con
     private val dataStore = context.createDataStore
 //
     private val dynamicColorsKey = booleanPreferencesKey("dynamic_colors")
+
+    private val themeIndexKey = intPreferencesKey("theme_index")
+
+    val themeIndex = dataStore.data.map { preferences ->
+        preferences[themeIndexKey] ?: 0
+    }
+
+    suspend fun setThemeIndex(index: Int) {
+        dataStore.edit { preferences ->
+            preferences[themeIndexKey] = index
+        }
+    }
+
 //    private val darkThemeKey = intPreferencesKey("dark_theme")
 //    private val amoledBlackKey = intPreferencesKey("amoled_black")
 //

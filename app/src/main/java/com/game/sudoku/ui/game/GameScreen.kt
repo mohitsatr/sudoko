@@ -191,13 +191,13 @@ fun GameScreenContent(
                 onGameMenuDismiss = {},
                 onMenuClick = {}
             )
-        }
+        },
+        containerColor = LocalBoardColors.current.backgroundColor,
     ) { scaffoldPaddings ->
         Column(
             modifier = Modifier
                 .padding(scaffoldPaddings)
                 .padding(horizontal = 12.dp)
-                .background(LocalBoardColors.current.backgroundColor),
         ) {
             Box(modifier = Modifier.weight(0.7f)) {
                 Column(
@@ -251,6 +251,7 @@ fun GameHeader(
     onGiveUp: () -> Unit,
     timerText: String,
 ) {
+    val localColors = LocalBoardColors.current
     TopAppBar(
         title = {
             Row(
@@ -316,7 +317,7 @@ fun GameHeader(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = fakeBoardColors.backgroundColor
+            containerColor = localColors.backgroundColor
         )
     )
 }

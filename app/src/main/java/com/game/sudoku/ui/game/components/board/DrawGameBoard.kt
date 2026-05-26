@@ -41,8 +41,8 @@ import com.game.sudoku.LocalBoardColors
 import com.game.sudoku.domain.GameBoard
 import com.game.sudoku.domain.GameBoard.Companion.parseToGameBoard
 import com.game.sudoku.ui.core.Cell
-import com.game.sudoku.ui.theme.SudokuBoardColors.LightThemeSudokuBoardColorsImpl
-import com.game.sudoku.ui.theme.SudokuBoardColors.SudokuBoardColors
+import com.game.sudoku.ui.theme.SudokuBoardColors.LightThemeSudokuColorsImpl
+import com.game.sudoku.ui.theme.SudokuBoardColors.SudokuColors
 import com.game.sudoku.ui.theme.SudokuTheme
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -64,7 +64,9 @@ fun DrawGameBoard(
     selectedCell: Cell,
     onClick: (Cell) -> Unit,
     enabled: Boolean = true,
-    boardColors: SudokuBoardColors = LocalBoardColors.current,
+    questions: Boolean = false,
+    cellsToHighLight: List<Cell>? = null,
+    boardColors: SudokuColors = LocalBoardColors.current,
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -245,7 +247,7 @@ fun DrawGameBoard(
 const val fakeGameString =
     "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
 val fakeGameBoard = parseToGameBoard(fakeGameString)
-val fakeBoardColors = LightThemeSudokuBoardColorsImpl()
+val fakeBoardColors = LightThemeSudokuColorsImpl()
 
 fun DrawScope.SingleCell(
     textMeasurer: TextMeasurer,
