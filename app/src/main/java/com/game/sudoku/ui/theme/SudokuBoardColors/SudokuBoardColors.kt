@@ -71,6 +71,10 @@ interface SudokuBoardColors {
 
     val selectedKeywordBackgroundColor: Color
     val selectedKeywordNumberColor: Color
+    val selectedButtonTextColor: Color
+    val nonSelectedButtonTextColor: Color
+    val selectedButtonBackground: Color
+    val nonSelectedButtonBackground: Color
 
     val notesColor: Color
 }
@@ -89,13 +93,19 @@ class LightThemeSudokuBoardColorsImpl (
 
     override val notesColor: Color = Color.White,
     override val nonSelectedNumberColor: Color = Color(0xFFA1A1A1),
-    override val selectedNumberColor: Color = backgroundColor,
+    override val selectedNumberColor: Color = Color(0xFFF9F9F9),
 
-    override val nonSelectedKeywordBackgroundColor: Color = backgroundColor,
+    override val nonSelectedKeywordBackgroundColor: Color = Color(0xFFF9F9F9),
     override val nonSelectedKeywordNumberColor: Color = nonSelectedNumberColor,
     override val selectedKeywordBackgroundColor: Color = thickLineColor,
-    override val selectedKeywordNumberColor: Color = backgroundColor
-) : SudokuBoardColors
+    override val selectedKeywordNumberColor: Color = Color(0xFFF9F9F9),
+
+    override val selectedButtonBackground: Color = Color(0xFFA89D79),
+    override val nonSelectedButtonBackground: Color = Color(0xFFF9F9F9),
+    override val selectedButtonTextColor: Color = Color(0xFFF9F9F9),
+    override val nonSelectedButtonTextColor: Color = Color(0xFF7b7b7b),
+
+    ) : SudokuBoardColors
 
 //class SudokuBoardColorsTheme1Impl (
 //    override val foregroundColor: Color = Color(0xFFF9F9F9),
