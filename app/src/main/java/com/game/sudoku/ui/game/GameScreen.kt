@@ -1,7 +1,6 @@
 package com.game.sudoku.ui.game
 
 import android.os.Build
-import android.util.Log
 import android.view.HapticFeedbackConstants
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
@@ -25,7 +24,6 @@ import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -201,7 +199,7 @@ fun GameScreenContent(
                 .padding(horizontal = 12.dp)
                 .background(LocalBoardColors.current.backgroundColor),
         ) {
-            Box(modifier = Modifier.weight(1f)) {
+            Box(modifier = Modifier.weight(0.7f)) {
                 Column(
                     modifier = Modifier.align(Alignment.Center)
                 ) {
@@ -225,17 +223,17 @@ fun GameScreenContent(
                     board = unSolvedBoard,
                     selectedCell = curCell,
                     onClick = onCellClick,
-                    identicalNumbersHighlight = true,
                     enabled = true,
-                    cellsToHighLight = null,
                 )
             }
-            GameKeyboard(
-                size = boardSize,
-                remainingUse = if (remainingUse) remainingUsesList else null,
-                onClick = onKeyboardClick,
-                selected = 0
-            )
+            Box(modifier = Modifier.weight(0.3f)) {
+                GameKeyboard(
+                    size = boardSize,
+                    remainingUse = if (remainingUse) remainingUsesList else null,
+                    onClick = onKeyboardClick,
+                    selected = 0
+                )
+            }
         }
     }
 }

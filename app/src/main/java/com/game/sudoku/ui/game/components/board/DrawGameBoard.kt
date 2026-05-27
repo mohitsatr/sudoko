@@ -63,10 +63,7 @@ fun DrawGameBoard(
     autoFontSize: Boolean = false,
     selectedCell: Cell,
     onClick: (Cell) -> Unit,
-    identicalNumbersHighlight: Boolean = true,
     enabled: Boolean = true,
-    questions: Boolean = false,
-    cellsToHighLight: List<Cell>? = null,
     boardColors: SudokuBoardColors = LocalBoardColors.current,
 ) {
     BoxWithConstraints(
@@ -75,7 +72,6 @@ fun DrawGameBoard(
             .aspectRatio(1f)
             .background(boardColors.backgroundColor)
     ) {
-
         val maxWidth = constraints.maxWidth.toFloat()
         val boardSizePx = minOf(constraints.maxWidth, constraints.maxHeight).toFloat()
         val thickLineWidth = with(LocalDensity.current) { 3.dp.toPx() }

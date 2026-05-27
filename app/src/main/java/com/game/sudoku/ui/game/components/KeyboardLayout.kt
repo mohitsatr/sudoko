@@ -1,5 +1,6 @@
 package com.game.sudoku.ui.game.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,39 +11,31 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.game.sudoku.LocalBoardColors
-import com.game.sudoku.ui.theme.SudokuBoardColors.SudokuBoardColors
 import com.game.sudoku.ui.theme.SudokuTheme
 
-//@Composable
-//fun KeyboardItem(
-//    modifier: Modifier = Modifier,
-//    number: Int,
-//    onClick: (Int) -> Unit,
-//    remainingUses: Int? = null,
-//    selected: Boolean -> false
-//) {
-//
-//}
 
 @Composable
 fun GameKeyboard(
@@ -51,97 +44,82 @@ fun GameKeyboard(
     onClick: (Int) -> Unit,
     size: Int = 9,
     selected: Int = 0,
-    keyboardColors: SudokuBoardColors = LocalBoardColors.current,
 ) {
-    Column(
-        modifier = Modifier.padding(8.dp)
+     Column (
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            (1..5).forEach { number ->
-                KeyboardButton(
-                    modifier = Modifier
-                        .weight(1f),
-                    number = number.toString(),
-                    onClick = { onClick(number) },
-                    remainingUses = if (remainingUse != null && remainingUse.size >= size) {
-                        remainingUse[number - 1].toString()
-                    } else {
-                        "0"
-                    },
-                    selected = selected == number,
-                    onSelectedTextColor = keyboardColors.selectedNumberColor,
-                    nonSelectedTextColor = keyboardColors.nonSelectedNumberColor,
-                    onSelectedBackgroundColor = keyboardColors.selectedBubbleColor,
-                    boardBackgroundColor = keyboardColors.backgroundColor,
-                    buttonOutlineColor = keyboardColors.thickLineColor
-                )
+            (0..4).forEach { number ->
+                val usesLeft = if (remainingUse != null && remainingUse.size >= size)
+                    remainingUse[number]
+                else 0
+                val isVisible = usesLeft > 0
+                AnimatedVisibility(
+                    visible = isVisible,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    KeyboardButton(
+                        modifier = Modifier,
+                        number = (number +  1).toString(),
+                        onClick = { onClick(number) },
+                        remainingUses = usesLeft.toString(),
+                    )
+                }
             }
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(Modifier.height(4.dp))
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            (6..9).forEach { number ->
-                KeyboardButton(
-                    modifier = Modifier
-                        .weight(1f),
-                    number = number.toString(),
-                    onClick = { onClick(number) },
-                    remainingUses = if (remainingUse != null && remainingUse.size >= size) {
-                        remainingUse[number - 1].toString()
-                    } else {
-                        "0"
-                    },
-                    selected = selected == number,
-                    onSelectedTextColor = keyboardColors.selectedNumberColor,
-                    nonSelectedTextColor = keyboardColors.nonSelectedNumberColor,
-                    onSelectedBackgroundColor = keyboardColors.selectedBubbleColor,
-                    boardBackgroundColor = keyboardColors.backgroundColor,
-                    buttonOutlineColor = keyboardColors.thickLineColor
-                )
+            (5..8).forEach { number ->
+                val usesLeft = if (remainingUse != null && remainingUse.size >= size)
+                    remainingUse[number - 1]
+                else 0
+                val isVisible = usesLeft > 0
+                AnimatedVisibility(visible = isVisible,
+                    modifier = Modifier.weight(1f)) {
+                    KeyboardButton(
+                        modifier = Modifier,
+                        number = (number + 1).toString(),
+                        onClick = { onClick(number) },
+                        remainingUses = usesLeft.toString(),
+                    )
+                }
             }
+
             KeyboardButton(
-                modifier = Modifier
-                    .weight(1f),
+                modifier = Modifier.weight(1f),
                 number = "X",
                 onClick = {},
                 remainingUses = "",
-                selected = false,
-                onSelectedTextColor = keyboardColors.selectedNumberColor,
-                nonSelectedTextColor = keyboardColors.nonSelectedNumberColor,
-                onSelectedBackgroundColor = keyboardColors.selectedBubbleColor,
-                boardBackgroundColor = keyboardColors.backgroundColor,
-                buttonOutlineColor = keyboardColors.thickLineColor
             )
-
         }
     }
 }
 
 @Composable
 fun KeyboardButton(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     number: String,
     onClick: () -> Unit,
     remainingUses: String,
-    selected: Boolean,
-    onSelectedTextColor: Color,
-    nonSelectedTextColor: Color,
-    onSelectedBackgroundColor: Color,
-    boardBackgroundColor: Color,
-    buttonOutlineColor: Color,
 ) {
+    val keyboardColors = LocalBoardColors.current
+
+    var selected by remember { mutableStateOf(false) }
+
     val textColor by animateColorAsState(
-        targetValue = if (selected) onSelectedTextColor
-        else nonSelectedTextColor
+        targetValue = if (selected) keyboardColors.selectedNumberColor
+        else keyboardColors.nonSelectedNumberColor
     )
     val backgroundColor by animateColorAsState(
-        targetValue = if (selected) onSelectedBackgroundColor
-        else boardBackgroundColor
+        targetValue = if (selected) keyboardColors.selectedBubbleColor
+        else keyboardColors.backgroundColor
     )
     Box(
         modifier = modifier
@@ -150,19 +128,17 @@ fun KeyboardButton(
             .background(backgroundColor)
             .border(
                 width = 1.dp,
-                color = buttonOutlineColor,
+                color = keyboardColors.thickLineColor,
                 shape = CircleShape
             )
             .combinedClickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier.padding(2.dp)
-        ) {
+        Column {
             Text(
                 text = number.uppercase(),
                 fontWeight = FontWeight.Bold,
-                fontSize = 25.sp,
+                fontSize = 24.sp,
                 color = textColor,
                 style = LocalTextStyle.current.copy(
                     lineHeight = 25.sp,
@@ -175,7 +151,7 @@ fun KeyboardButton(
             Text(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 text = remainingUses,
-                fontSize = 10.sp,
+                fontSize = 8.sp,
                 color = textColor,
                 style = LocalTextStyle.current.copy(
                     lineHeight = 7.sp,

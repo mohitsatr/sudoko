@@ -84,6 +84,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.navigation.safe.args.generator)
+    implementation(libs.androidx.compose.foundation.layout)
     ksp(libs.androidx.room.compiler)
 
     ksp(libs.hiltCompiler)
