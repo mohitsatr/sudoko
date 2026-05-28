@@ -265,7 +265,8 @@ fun GameHeader(
             IconButton(onClick = onBackClick) {
                 Icon(
                     painter = painterResource(R.drawable.ic_round_arrow_back_24),
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = localColors.nonSelectedNumberColor
                 )
             }
         },
@@ -285,7 +286,9 @@ fun GameHeader(
                                 R.drawable.ic_round_play_24
                             }
                         ),
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = localColors.nonSelectedNumberColor
+
                     )
                 }
             }
@@ -294,7 +297,9 @@ fun GameHeader(
                     Icon(
                         modifier = Modifier.rotate(180f),
                         painter = painterResource(R.drawable.ic_round_replay_24),
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = localColors.nonSelectedNumberColor
+
                     )
                 }
             }
@@ -303,7 +308,9 @@ fun GameHeader(
                     IconButton(onClick = onMenuClick) {
                         Icon(
                             Icons.Default.MoreVert,
-                            contentDescription = null
+                            contentDescription = null,
+                            tint = localColors.nonSelectedNumberColor
+
                         )
                     }
                 }
@@ -333,7 +340,8 @@ fun TopBarTimer(
     ) {
         Text(
             text = text,
-            modifier = Modifier.padding(horizontal = 4.dp)
+            modifier = Modifier.padding(horizontal = 4.dp),
+            color = LocalBoardColors.current.nonSelectedNumberColor
         )
     }
 }

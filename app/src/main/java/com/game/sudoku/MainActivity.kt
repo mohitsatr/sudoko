@@ -33,6 +33,7 @@ import com.game.sudoku.data.datastore.AppSettingsManager
 import com.game.sudoku.data.datastore.ThemeSettingsManager
 import com.game.sudoku.ui.home.HomeViewModel
 import com.game.sudoku.ui.theme.SudokuBoardColors.DarkBlueThemeSudokuColorsImpl
+import com.game.sudoku.ui.theme.SudokuBoardColors.DarkGreenThemeSudokuColorsImpl
 import com.game.sudoku.ui.theme.SudokuBoardColors.LightRedThemeSudokuColorsImpl
 import com.game.sudoku.ui.theme.SudokuBoardColors.LightThemeSudokuColorsImpl
 import com.game.sudoku.ui.theme.SudokuBoardColors.SudokuColors
@@ -74,6 +75,9 @@ class MainActivity : ComponentActivity() {
                 }
                 2 -> {
                     LightRedThemeSudokuColorsImpl()
+                }
+                3 -> {
+                    DarkGreenThemeSudokuColorsImpl()
                 }
                 else -> LightThemeSudokuColorsImpl()
             }

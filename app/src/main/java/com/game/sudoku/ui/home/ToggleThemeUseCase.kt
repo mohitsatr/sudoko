@@ -15,8 +15,7 @@ class ToggleThemeUseCase @Inject constructor(
 
     suspend operator fun invoke() {
         val currentIndex = themeSettingsManager.themeIndex.first()
-        val nextIndex = if (currentIndex + 1 < 3) currentIndex + 1 else 0
+        val nextIndex = if (currentIndex + 1 < 4) currentIndex + 1 else 0
         themeSettingsManager.setThemeIndex(nextIndex)
     }
 }
-
