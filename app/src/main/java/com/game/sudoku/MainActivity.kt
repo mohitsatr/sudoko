@@ -33,6 +33,7 @@ import com.game.sudoku.data.datastore.AppSettingsManager
 import com.game.sudoku.data.datastore.ThemeSettingsManager
 import com.game.sudoku.ui.home.HomeViewModel
 import com.game.sudoku.ui.theme.SudokuBoardColors.DarkBlueThemeSudokuColorsImpl
+import com.game.sudoku.ui.theme.SudokuBoardColors.LightRedThemeSudokuColorsImpl
 import com.game.sudoku.ui.theme.SudokuBoardColors.LightThemeSudokuColorsImpl
 import com.game.sudoku.ui.theme.SudokuBoardColors.SudokuColors
 import com.game.sudoku.ui.theme.SudokuLightTheme
@@ -70,6 +71,9 @@ class MainActivity : ComponentActivity() {
             val gameTheme = when (themeIndex.value) {
                 1 -> {
                     DarkBlueThemeSudokuColorsImpl()
+                }
+                2 -> {
+                    LightRedThemeSudokuColorsImpl()
                 }
                 else -> LightThemeSudokuColorsImpl()
             }
