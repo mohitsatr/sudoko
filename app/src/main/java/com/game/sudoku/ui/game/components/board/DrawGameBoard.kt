@@ -2,6 +2,7 @@ package com.game.sudoku.ui.game.components.board
 
 import android.annotation.SuppressLint
 import android.graphics.Paint
+import android.graphics.Rect
 import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -67,104 +68,101 @@ fun DrawGameBoard(
     questions: Boolean = false,
     cellsToHighLight: List<Cell>? = null,
     boardColors: SudokuColors = LocalBoardColors.current,
+    cellSize: Float,
+    maxWidth: Float,
 ) {
-    BoxWithConstraints(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .background(boardColors.backgroundColor)
-    ) {
-        val maxWidth = constraints.maxWidth.toFloat()
-        val boardSizePx = minOf(constraints.maxWidth, constraints.maxHeight).toFloat()
-        val thickLineWidth = with(LocalDensity.current) { 3.dp.toPx() }
-        val thinLineWidth = with(LocalDensity.current) { 1.5.dp.toPx() }
 
-        // single cell size - 99 / 9 = 11 - 11 * 11 sq^2
-        val cellSize by remember(size) { mutableFloatStateOf(maxWidth / size.toFloat()) }
+//    val boardSizePx = minOf(constraints.maxWidth, constraints.maxHeight).toFloat()
 
-        var zoom by remember(enabled) { mutableFloatStateOf(1f) }
-        var offset by remember(enabled) { mutableStateOf(Offset.Zero) }
+    val thickLineWidth = with(LocalDensity.current) { 3.dp.toPx() }
+    val thinLineWidth = with(LocalDensity.current) { 1.5.dp.toPx() }
 
-        val boardModifier = Modifier
-            .fillMaxSize()
-            .pointerInput(key1 = enabled, key2 = board) {
-                detectTapGestures(
-                    onTap = {
-                        val totalOffset = it / zoom + offset
-                        val row = floor((totalOffset.y) / cellSize).toInt()
-                            .coerceIn(0, board.size)
-                        val column = floor((totalOffset.x) / cellSize).toInt()
-                            .coerceIn(0, board.size)
-                        onClick(board.getCell(row, column))
-                    }
-                )
-            }
+    // single cell size - 99 / 9 = 11 - 11 * 11 sq^2
+    val cellSize by remember(size) { mutableFloatStateOf(maxWidth / size.toFloat()) }
 
-        val thickLineColor = boardColors.thickLineColor
-        val thinLineColor = boardColors.thinLineColor
+    var zoom by remember(enabled) { mutableFloatStateOf(1f) }
+    var offset by remember(enabled) { mutableStateOf(Offset.Zero) }
 
-        val nonSelectedCellBackgroundColor = boardColors.nonSelectedBubbleColor
-        val nonSelectedCellNumberColor = boardColors.nonSelectedNumberColor
-
-        val selectedCellBackgroundColor = boardColors.selectedBubbleColor
-        val selectedCellNumberColor = boardColors.selectedNumberColor
-
-        val vertThick by remember(size) { mutableIntStateOf(floor(sqrt(size.toFloat())).toInt()) }
-        val horThick by remember(size) { mutableIntStateOf(ceil(sqrt(size.toFloat())).toInt()) }
-        var fontSizePx by remember { mutableFloatStateOf(1f) }
-
-        with(LocalDensity.current) {
-            LaunchedEffect(autoFontSize, size, mainTextSize) {
-                fontSizePx = if (autoFontSize) {
-                    (cellSize * 0.9f).toSp().toPx()
-                } else {
-                    mainTextSize.toPx()
+    val boardModifier = Modifier
+        .fillMaxSize()
+        .pointerInput(key1 = enabled, key2 = board) {
+            detectTapGestures(
+                onTap = {
+                    val totalOffset = it / zoom + offset
+                    val row = floor((totalOffset.y) / cellSize).toInt()
+                        .coerceIn(0, board.size)
+                    val column = floor((totalOffset.x) / cellSize).toInt()
+                        .coerceIn(0, board.size)
+                    onClick(board.getCell(row, column))
                 }
+            )
+        }
+
+    val thickLineColor = boardColors.thickLineColor
+    val thinLineColor = boardColors.thinLineColor
+
+    val nonSelectedCellBackgroundColor = boardColors.nonSelectedBubbleColor
+    val nonSelectedCellNumberColor = boardColors.nonSelectedNumberColor
+
+    val selectedCellBackgroundColor = boardColors.selectedBubbleColor
+    val selectedCellNumberColor = boardColors.selectedNumberColor
+
+    val vertThick by remember(size) { mutableIntStateOf(floor(sqrt(size.toFloat())).toInt()) }
+    val horThick by remember(size) { mutableIntStateOf(ceil(sqrt(size.toFloat())).toInt()) }
+    var fontSizePx by remember { mutableFloatStateOf(1f) }
+
+    with(LocalDensity.current) {
+        LaunchedEffect(autoFontSize, size, mainTextSize) {
+            fontSizePx = if (autoFontSize) {
+                (cellSize * 0.9f).toSp().toPx()
+            } else {
+                mainTextSize.toPx()
             }
         }
+    }
 
-        // numbers
-        var nonSelectedNumberPaint by remember(fontSizePx) {
-            mutableStateOf(Paint().apply {
-                color = nonSelectedCellNumberColor.toArgb()
-                isAntiAlias = true
-                textSize = fontSizePx
-            })
-        }
+    // numbers
+    var nonSelectedNumberPaint by remember(fontSizePx) {
+        mutableStateOf(Paint().apply {
+            color = nonSelectedCellNumberColor.toArgb()
+            isAntiAlias = true
+            textSize = fontSizePx
+        })
+    }
 
-        var selectedNumberPaint by remember(fontSizePx) {
-            mutableStateOf(Paint().apply {
-                color = selectedCellNumberColor.toArgb()
-                isAntiAlias = true
-                textSize = fontSizePx
-            })
-        }
+    var selectedNumberPaint by remember(fontSizePx) {
+        mutableStateOf(Paint().apply {
+            color = selectedCellNumberColor.toArgb()
+            isAntiAlias = true
+            textSize = fontSizePx
+        })
+    }
 
-        var nonSelectedCellBackgroundPaint by remember(fontSizePx) {
-            mutableStateOf(Paint().apply {
-                color = nonSelectedCellBackgroundColor.toArgb()
-                isAntiAlias = true
-                textSize = fontSizePx
-            })
-        }
+    var nonSelectedCellBackgroundPaint by remember(fontSizePx) {
+        mutableStateOf(Paint().apply {
+            color = nonSelectedCellBackgroundColor.toArgb()
+            isAntiAlias = true
+            textSize = fontSizePx
+        })
+    }
 
-        var selectedCellBackgroundPaint by remember(fontSizePx) {
-            mutableStateOf(Paint().apply {
-                color = selectedCellBackgroundColor.toArgb()
-                isAntiAlias = true
-                textSize = fontSizePx
-            })
-        }
+    var selectedCellBackgroundPaint by remember(fontSizePx) {
+        mutableStateOf(Paint().apply {
+            color = selectedCellBackgroundColor.toArgb()
+            isAntiAlias = true
+            textSize = fontSizePx
+        })
+    }
 
-        Log.d("cellSize", "$cellSize")
-        val textMeasurer = rememberTextMeasurer()
+    Log.d("cellSize", "$cellSize")
+    val textMeasurer = rememberTextMeasurer()
 
-        Canvas(modifier = boardModifier) {
-            val cornerRadius = CornerRadius(15f, 15f)
-            val clickOffset = Offset(
-                x = selectedCell.column * cellSize,
-                y = selectedCell.row * cellSize
-            )
+    Canvas(modifier = boardModifier) {
+        val cornerRadius = CornerRadius(15f, 15f)
+        val clickOffset = Offset(
+            x = selectedCell.column * cellSize,
+            y = selectedCell.row * cellSize
+        )
 
 //            cellsToHighLight?.forEach {
 //                drawRoundCell(
@@ -183,65 +181,66 @@ fun DrawGameBoard(
 //                )
 //            }
 
-            // horizontal lines
-            for (i in 1 until size) {
+        // horizontal lines
+        for (i in 1 until size) {
+            drawLine(
+                color = if (i % 3 == 0) thickLineColor else thinLineColor,
+                start = Offset(cellSize * i.toFloat(), 0f),
+                end = Offset(cellSize * i.toFloat(), maxWidth),
+                strokeWidth = if (i % 3 == 0) thickLineWidth else thinLineWidth
+            )
+        }
+
+        // vertical
+        for (i in 1 until size) {
+            if (maxWidth >= cellSize * i) {
                 drawLine(
                     color = if (i % 3 == 0) thickLineColor else thinLineColor,
-                    start = Offset(cellSize * i.toFloat(), 0f),
-                    end = Offset(cellSize * i.toFloat(), maxWidth),
+                    start = Offset(0f, cellSize * i.toFloat()),
+                    end = Offset(maxWidth, cellSize * i.toFloat()),
                     strokeWidth = if (i % 3 == 0) thickLineWidth else thinLineWidth
                 )
             }
+        }
 
-            // vertical
-            for (i in 1 until size) {
-                if (maxWidth >= cellSize * i) {
-                    drawLine(
-                        color = if (i % 3 == 0) thickLineColor else thinLineColor,
-                        start = Offset(0f, cellSize * i.toFloat()),
-                        end = Offset(maxWidth, cellSize * i.toFloat()),
-                        strokeWidth = if (i % 3 == 0) thickLineWidth else thinLineWidth
+        for (row in 0 until size) {
+            for (col in 0 until size) {
+                val cell = board.getCell(row, col)
+                if (cell.value != 0) {
+                    val isSelected =
+                        cell.row == selectedCell.row && cell.column == selectedCell.column
+
+                    val textStyle = TextStyle(
+                        color = if (isSelected) selectedCellNumberColor else nonSelectedCellNumberColor,
+                        fontSize = mainTextSize
                     )
-                }
-            }
+                    val cellCenter = Offset(
+                        x = col * cellSize + cellSize / 2f,
+                        y = row * cellSize + cellSize / 2f
+                    )
 
-            for (row in 0 until size) {
-                for (col in 0 until size) {
-                    val cell = board.getCell(row, col)
-                    if (cell.value != 0) {
-                        val isSelected = cell.row == selectedCell.row && cell.column == selectedCell.column
+                    val textLayoutResult = textMeasurer.measure(
+                        text = cell.value.toString(),
+                        style = textStyle
+                    )
 
-                        val textStyle = TextStyle(
-                            color = if (isSelected) selectedCellNumberColor else nonSelectedCellNumberColor,
-                            fontSize = mainTextSize
-                        )
-                        val cellCenter = Offset(
-                            x = col * cellSize + cellSize / 2f,
-                            y = row * cellSize + cellSize / 2f
-                        )
+                    val textX = col * cellSize + (cellSize - textLayoutResult.size.width) / 2f
+                    val textY = row * cellSize + (cellSize - textLayoutResult.size.height) / 2f
 
-                        val textLayoutResult = textMeasurer.measure(
-                            text = cell.value.toString(),
-                            style = textStyle
-                        )
-
-                        val textX = col * cellSize + (cellSize - textLayoutResult.size.width) / 2f
-                        val textY = row * cellSize + (cellSize - textLayoutResult.size.height) / 2f
-
-                        drawCircle(
-                            color = if (isSelected) selectedCellBackgroundColor else nonSelectedCellBackgroundColor,
-                            radius = (cellSize / 2) * 0.80f,
-                            center = cellCenter
-                        )
-                        drawText(
-                            textLayoutResult = textLayoutResult,
-                            topLeft = Offset(textX, textY)
-                        )
-                    }
+                    drawCircle(
+                        color = if (isSelected) selectedCellBackgroundColor else nonSelectedCellBackgroundColor,
+                        radius = (cellSize / 2) * 0.80f,
+                        center = cellCenter
+                    )
+                    drawText(
+                        textLayoutResult = textLayoutResult,
+                        topLeft = Offset(textX, textY)
+                    )
                 }
             }
         }
     }
+
 }
 
 const val fakeGameString =
@@ -275,7 +274,7 @@ fun DrawScope.SingleCell(
     drawIntoCanvas { canvas ->
         if (currentCell.value != 0) {
             val textToDraw = currentCell.value.toString().uppercase()
-            val textBounds = android.graphics.Rect()
+            val textBounds = Rect()
 //            textColor.getTextBounds(textToDraw, 0, 1, textBounds)
             val textWidth = textColor.measureText(textToDraw)
 
@@ -332,7 +331,9 @@ fun GameBoardPreview() {
             size = 9,
             selectedCell = Cell(4, 0, 8),
             onClick = {},
-            boardColors = fakeBoardColors
+            boardColors = fakeBoardColors,
+            cellSize = 110f,
+            maxWidth = 200f,
         )
     }
 }
