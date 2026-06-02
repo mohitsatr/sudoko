@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Surface
@@ -32,18 +33,17 @@ import com.game.sudoku.ui.theme.SudokuTheme
 
 @Composable
 fun GameKeyboard(
-    numbers: List<Int> = (1..9).toList(),
     remainingUse: List<Int>? = null,
     onClick: (Int) -> Unit,
     size: Int = 9,
-    selected: Int = 0,
+    selected: Int = -1,
+    keySize: Float,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             (1..5).forEach { number ->
@@ -51,45 +51,43 @@ fun GameKeyboard(
                 val isVisible = usesLeft > 0
 
                 Box(modifier = Modifier
-                    .weight(1f)
-                    .alpha(if (isVisible) 1f else 0f)
+                    .alpha(1f)
                 ) {
                     KeyboardButton(
                         number = number.toString(),
                         onClick = { onClick(number) },
                         remainingUses = usesLeft.toString(),
                         isKeyPressed = selected == number,
+                        keySize = keySize
                     )
                 }
             }
         }
         Spacer(Modifier.height(4.dp))
         Row(
-            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             (6..9).forEach { number ->
                 val usesLeft = remainingUse?.getOrNull(number) ?: 0
                 val isVisible = usesLeft > 0
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .alpha(if (isVisible) 1f else 0f)) {
+                    modifier = Modifier) {
                     KeyboardButton(
                         number = number.toString(),
                         onClick = { onClick(number) },
                         remainingUses = usesLeft.toString(),
                         isKeyPressed = selected == number,
+                        keySize = keySize
                     )
                 }
             }
 
             KeyboardButton(
-                modifier = Modifier.weight(1f),
                 number = "X",
                 onClick = {},
                 remainingUses = "",
                 isKeyPressed = selected == 0,
+                keySize = keySize
             )
         }
     }
@@ -102,6 +100,7 @@ fun KeyboardButton(
     onClick: () -> Unit,
     remainingUses: String,
     isKeyPressed: Boolean,
+    keySize: Float,
 ) {
     val keyboardColors = LocalBoardColors.current
 
@@ -116,6 +115,7 @@ fun KeyboardButton(
     Box(
         modifier = modifier
             .clip(CircleShape)
+            .size(keySize.dp)
             .aspectRatio(1f)
             .background(backgroundColor)
             .border(
@@ -164,9 +164,9 @@ fun GameKeyboardPreview() {
     SudokuTheme {
         Surface {
             GameKeyboard(
-                numbers = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9),
                 remainingUse = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9),
                 onClick = {},
+                keySize = 40f
             )
         }
     }

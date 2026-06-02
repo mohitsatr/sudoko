@@ -12,8 +12,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -178,7 +180,7 @@ fun GameScreenContent(
     )
 
     var selectedKeyboardKey by remember { mutableIntStateOf(-1) }
-
+    var cellSize by remember(boardSize) { mutableFloatStateOf(-1f) }
     Scaffold(
         topBar = {
             GameHeader(
@@ -218,14 +220,24 @@ fun GameScreenContent(
                         )
                     }
                 }
-                DrawGameBoard(
-                    modifier = Modifier
-                        .scale(boardScale, boardScale),
-                    board = unSolvedBoard,
-                    selectedCell = curCell,
-                    onClick = onCellClick,
-                    enabled = true,
-                )
+                BoxWithConstraints(
+                    modifier = Modifier.scale(boardScale, boardScale)
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                ) {
+                    val maxWidth = constraints.maxWidth.toFloat()
+                    // single cell size - 99 / 9 = 11 - 11 * 11 sq^2
+                    cellSize = maxWidth / boardSize.toFloat()
+
+                    DrawGameBoard(
+                        board = unSolvedBoard,
+                        maxWidth = maxWidth,
+                        selectedCell = curCell,
+                        onClick = onCellClick,
+                        enabled = true,
+                        cellSize = cellSize,
+                    )
+                }
             }
             Box(modifier = Modifier.weight(0.3f)) {
                 GameKeyboard(
@@ -235,7 +247,8 @@ fun GameScreenContent(
                         selectedKeyboardKey = it
                         onKeyboardClick(it)
                     },
-                    selected = selectedKeyboardKey
+                    selected = selectedKeyboardKey,
+                    keySize = cellSize * 0.7f
                 )
             }
         }
