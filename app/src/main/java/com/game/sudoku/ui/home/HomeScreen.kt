@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -42,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -123,7 +121,8 @@ fun HomeScreenContent(
     resumeGame: (Long) -> Unit,
 ) {
     val localColors = LocalBoardColors.current
-
+    val newGameButtonInteractionSource = remember { MutableInteractionSource() }
+    val continueButtonInteractionSource = remember { MutableInteractionSource() }
     Scaffold(
         topBar = { HomeTopBar(onThemeIconClick = onThemeIconClick) },
     ) { paddingValues ->
@@ -138,9 +137,23 @@ fun HomeScreenContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                GameButton("Start New Game", onStartNewGameClick)
+                val isNewButtonPressed = isGenerating || newGameButtonInteractionSource.collectIsPressedAsState().value
+                GameButton(
+                    "Start New Game",
+                    isNewButtonPressed,
+                    newGameButtonInteractionSource
+                ) {
+                    onStartNewGameClick()
+                }
                 Spacer(modifier = Modifier.height(12.dp))
-                GameButton("Continue Game",onContinueOldGameClick)
+                val isResumeButtonPressed = isContinueLastGame || continueButtonInteractionSource.collectIsPressedAsState().value
+                GameButton(
+                    "Resume",
+                    isResumeButtonPressed,
+                    continueButtonInteractionSource
+                ) {
+                    onContinueOldGameClick()
+                }
             }
 
             if (isContinueLastGame) {
@@ -178,26 +191,21 @@ fun HomeScreenContent(
 @Composable
 fun GameButton(
     text: String,
+    selected: Boolean,
+    interactionSource: MutableInteractionSource,
     onClick: () -> Unit,
 ) {
     val localColors = LocalBoardColors.current
-    var selected by remember { mutableStateOf(false) }
 
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    val isHighLight = selected || isPressed
-
-    val backgroundColor = if (isHighLight)
+    val backgroundColor = if (selected)
         localColors.selectedButtonBackground
     else
         localColors.nonSelectedButtonBackground
-    val outlineColor = if (isHighLight) localColors.selectedButtonBackground
-        else localColors.thinLineColor
-    val textColor = if (isHighLight) localColors.selectedButtonTextColor
-        else localColors.nonSelectedButtonTextColor
-//    val textColor = if (selected) Color.Red
-//        else Color.Green
+    val outlineColor = if (selected) localColors.selectedButtonBackground
+    else localColors.thinLineColor
+    val textColor = if (selected) localColors.selectedButtonTextColor
+    else localColors.nonSelectedButtonTextColor
+
     Log.d("GameButton", "$selected")
     Surface(
         shape = RoundedCornerShape(40.dp),
@@ -208,10 +216,7 @@ fun GameButton(
             .clip(RoundedCornerShape(40.dp))
             .combinedClickable(
                 interactionSource = interactionSource,
-                onClick = {
-                    selected = !selected
-                    onClick()
-                }
+                onClick = onClick
             )
             .width(240.dp),
     ) {
@@ -250,8 +255,9 @@ fun HomeTopBar(
             Icon(
                 ImageVector.vectorResource(R.drawable.palette_24px),
                 tint = localColors.selectedButtonBackground,
-                modifier = Modifier.size(28.dp)
-                    .clickable(onClick = onThemeIconClick,),
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable(onClick = onThemeIconClick),
                 contentDescription = ""
             )
         }
