@@ -248,7 +248,7 @@ fun GameScreenContent(
                         onKeyboardClick(it)
                     },
                     selected = selectedKeyboardKey,
-                    keySize = cellSize * 0.7f
+                    keySize = cellSize * 0.5f
                 )
             }
         }

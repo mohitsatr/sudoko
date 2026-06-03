@@ -7,9 +7,11 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -30,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.game.sudoku.LocalBoardColors
 import com.game.sudoku.ui.theme.SudokuTheme
+import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun GameKeyboard(
@@ -39,57 +42,55 @@ fun GameKeyboard(
     selected: Int = -1,
     keySize: Float,
 ) {
-    Column(
+    Box(
         modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            (1..5).forEach { number ->
-                val usesLeft = remainingUse?.getOrNull(number) ?: 0
-                val isVisible = usesLeft > 0
-
-                Box(modifier = Modifier
-                    .alpha(1f)
-                ) {
-                    KeyboardButton(
-                        number = number.toString(),
-                        onClick = { onClick(number) },
-                        remainingUses = usesLeft.toString(),
-                        isKeyPressed = selected == number,
-                        keySize = keySize
-                    )
-                }
-            }
-        }
-        Spacer(Modifier.height(4.dp))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            (6..9).forEach { number ->
-                val usesLeft = remainingUse?.getOrNull(number) ?: 0
-                val isVisible = usesLeft > 0
-                Box(
-                    modifier = Modifier) {
-                    KeyboardButton(
-                        number = number.toString(),
-                        onClick = { onClick(number) },
-                        remainingUses = usesLeft.toString(),
-                        isKeyPressed = selected == number,
-                        keySize = keySize
-                    )
-                }
-            }
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        maxItemsInEachRow = 5
+    ) {
+        (1..size + 1).forEach { number ->
+            val usesLeft = remainingUse?.getOrNull(number) ?: 0
+            val isVisible = usesLeft > 0
 
             KeyboardButton(
-                number = "X",
-                onClick = {},
-                remainingUses = "",
-                isKeyPressed = selected == 0,
+                number = if (number <= size) number.toString() else "X",
+                onClick = { onClick(number) },
+                remainingUses = usesLeft,
+                isKeyPressed = selected == number,
                 keySize = keySize
             )
+//            }
         }
+    }
+//        Row(
+//            horizontalArrangement = Arrangement.spacedBy(4.dp)
+//        ) {
+//            (6..9).forEach { number ->
+//                val usesLeft = remainingUse?.getOrNull(number) ?: 0
+//                val isVisible = usesLeft > 0
+//                Box(
+//                    modifier = Modifier) {
+//                    KeyboardButton(
+//                        number = number.toString(),
+//                        onClick = { onClick(number) },
+//                        remainingUses = usesLeft.toString(),
+//                        isKeyPressed = selected == number,
+//                        keySize = keySize
+//                    )
+//                }
+//            }
+//
+//            KeyboardButton(
+//                number = "X",
+//                onClick = {},
+//                remainingUses = "",
+//                isKeyPressed = selected == 0,
+//                keySize = keySize
+//            )
+//        }
     }
 }
 
@@ -98,7 +99,7 @@ fun KeyboardButton(
     modifier: Modifier = Modifier,
     number: String,
     onClick: () -> Unit,
-    remainingUses: String,
+    remainingUses: Int,
     isKeyPressed: Boolean,
     keySize: Float,
 ) {
@@ -142,18 +143,20 @@ fun KeyboardButton(
                 )
             )
 
-            Text(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                text = remainingUses,
-                fontSize = 8.sp,
-                color = textColor,
-                style = LocalTextStyle.current.copy(
-                    lineHeight = 7.sp,
-                    platformStyle = PlatformTextStyle(
-                        includeFontPadding = false
+            if (remainingUses > 0) {
+                Text(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = remainingUses.toString(),
+                    fontSize = 8.sp,
+                    color = textColor,
+                    style = LocalTextStyle.current.copy(
+                        lineHeight = 7.sp,
+                        platformStyle = PlatformTextStyle(
+                            includeFontPadding = false
+                        )
                     )
                 )
-            )
+            }
         }
     }
 }
