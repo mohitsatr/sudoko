@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.game.sudoku.GenerationStatus
 import com.game.sudoku.LocalBoardColors
 import com.game.sudoku.R
 import com.game.sudoku.ui.theme.SudokuTheme
@@ -68,23 +70,23 @@ fun HomeScreen(
     navigator: DestinationsNavigator,
 ) {
 
-    Log.d("rop", viewModel.readyToPlay.toString())
-
+    val gameGeneratingState = viewModel.gameGeneratingStateFlow.collectAsStateWithLifecycle()
     var continueLastGame by remember { mutableStateOf(false) }
-//    val lastGames = viewModel.lastGames.collectAsStateWithLifecycle(emptyMap())
-//    val lastGamesSize = lastGames.value.size
 
-//    val lastGames1 by viewModel.lastGames.collectAsStateWithLifecycle(initialValue = emptyMap())
-
-    LaunchedEffect(viewModel.readyToPlay) {
-        if (viewModel.readyToPlay && viewModel.insertedBoardUid != -1L) {
-            navigator.navigate(
-                GameScreenDestination(
-                    gameUid = viewModel.insertedBoardUid,
-                    playedBefore = false,
+    LaunchedEffect(gameGeneratingState.value.generationStatus) {
+        // can we sure of insertedBoardUid is not -1L, when GENERATION is READY
+        // yes, it insertedBoardUid's has to reset to -1L
+        Log.d("HomeScreen", "${gameGeneratingState.value.generationStatus} boardUid: ${gameGeneratingState.value.insertedBoardUid}")
+        if (gameGeneratingState.value.generationStatus == GenerationStatus.READY) {
+            gameGeneratingState.value.insertedBoardUid?.let {
+                navigator.navigate(
+                    GameScreenDestination(
+                        gameUid = it,
+                        playedBefore = false,
+                    )
                 )
-            )
-            viewModel.readyToPlay = false
+            }
+            viewModel.onNavigationBackHandled()
         }
     }
 
@@ -102,8 +104,8 @@ fun HomeScreen(
             continueLastGame = false
         },
         isContinueLastGame = continueLastGame,
-        isGenerating = viewModel.isGenerating,
-        isSolving = viewModel.isSolving,
+        isGenerating = gameGeneratingState.value.generationStatus == GenerationStatus.GENERATING,
+        isSolving = gameGeneratingState.value.generationStatus == GenerationStatus.SOLVING,
         onThemeIconClick = { viewModel.toggleTheme() }
     )
 }
