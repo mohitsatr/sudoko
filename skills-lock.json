@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "skills": {
+    "compose-focus-navigation": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/compose-focus-navigation/SKILL.md",
+      "computedHash": "05147a310caa82814f329dc3acfb0b47dde27ab25ba8e53ca4db78a773b13c4d"
+    },
+    "compose-modifier-and-layout-style": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/compose-modifier-and-layout-style/SKILL.md",
+      "computedHash": "8ae07e6dc15487e009447adea2e938e45ae543fe9c364c0588f010080de35835"
+    },
+    "compose-side-effects": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/compose-side-effects/SKILL.md",
+      "computedHash": "d4acd3f4d6acfb68349f5aef9718ca0e397f3902f26b629e483f2cd30dc6fa31"
+    },
+    "compose-slot-api-pattern": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/compose-slot-api-pattern/SKILL.md",
+      "computedHash": "23a06e1277bbfc81e36e064d80e8c97398e1d88ff8d0dfdfd7ca04f8db68139b"
+    },
+    "compose-state-hoisting": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/compose-state-hoisting/SKILL.md",
+      "computedHash": "3bb1fc9bc5da4e4383f4aa44dffa054c971ce28fbc44393c447b5697e63d2938"
+    },
+    "compose-state-holder-ui-split": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/compose-state-holder-ui-split/SKILL.md",
+      "computedHash": "787236b886da791f7b24ae4cdb9e714f786907b3d86db68bbebfa9c4d4d82132"
+    },
+    "compose-ui-testing-patterns": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/compose-ui-testing-patterns/SKILL.md",
+      "computedHash": "eaeb1524dfa939ea561782909dab5df0575e984c6b1676197421d4f580e7d04f"
+    },
+    "implement-issue": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/implement-issue/SKILL.md",
+      "computedHash": "b1a67b9029f6496ef2a3e6bd3ca54b0eaa9b9a96d6af974e620bf95a8f8492c4"
+    },
+    "kotlin-control-flow": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/kotlin-control-flow/SKILL.md",
+      "computedHash": "660b160cdc56b7d408fbe4dcca7bab846fea11595ab0a9c321cdabd947a1acb7"
+    },
+    "kotlin-coroutines-structured-concurrency": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/kotlin-coroutines-structured-concurrency/SKILL.md",
+      "computedHash": "c31f4f027fab909555979ba82fceec81329348ea22b4853da6ebfa12cceebb35"
+    },
+    "kotlin-flow-state-event-modeling": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/kotlin-flow-state-event-modeling/SKILL.md",
+      "computedHash": "fa00097b53f25ea0313a9b2ce6a72b22624c27092d1538a44d9f401b051328ac"
+    },
+    "kotlin-functions": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/kotlin-functions/SKILL.md",
+      "computedHash": "fb4fdb2a339bbba2f049dcdfe7088eead1e8f956473ecb86215b691352a0ef5b"
+    },
+    "kotlin-types-value-class": {
+      "source": "chrisbanes/skills",
+      "sourceType": "github",
+      "skillPath": "skills/kotlin-types-value-class/SKILL.md",
+      "computedHash": "6242e1c9b75a25816cfa5733bebfd32c7f2d3c00c963cd51fae6021a3ae656ec"
+    }
+  }
+}
