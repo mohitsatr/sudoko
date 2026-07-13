@@ -19,14 +19,20 @@ import com.game.sudoku.domain.GameBoard.Companion.parseToGameBoard
 import com.game.sudoku.domain.usecase.GetBoardUseCase
 import com.game.sudoku.domain.usecase.GetSavedGameUseCase
 import com.game.sudoku.domain.usecase.SaveGameUseCase
+import com.game.sudoku.ui.GameBoardState
+import com.game.sudoku.ui.GameStatus
+import com.game.sudoku.ui.GameStatusState
 import com.game.sudoku.ui.core.Cell
 import com.ramcosta.composedestinations.generated.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.ilikeyourhat.kudoku.rating.Difficulty
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Timer
@@ -80,10 +86,11 @@ class GameViewModel @Inject constructor(
     private lateinit var boardEntity: SudokuBoardModel
     private lateinit var initialBoard: GameBoard
 
+    private val _gameboardState = MutableStateFlow(GameBoardState())
+    val gameboardState = _gameboardState.asStateFlow()
+
     var solvedBoard = GameBoard()
 
-    var notesToggled by mutableStateOf(false)
-    var gameBoard by mutableStateOf(GameBoard())
     var size by mutableIntStateOf(gameBoard.size)
 
     var gameDifficulty by mutableStateOf(Difficulty.EASY)
@@ -106,7 +113,6 @@ class GameViewModel @Inject constructor(
     var showSolution by mutableStateOf(false)
 
     var remainingUse = appSettingsManager.remainingUse
-    var remainingUsesList = emptyList<Int>()
 
     var digitFirstNumber by mutableIntStateOf(0)
     private val inputMethod = appSettingsManager.inputMethod
@@ -116,18 +122,18 @@ class GameViewModel @Inject constructor(
             initialValue = 1
         )
 
-    var currentCell by mutableStateOf(Cell(-1, -1, 0))
-
     var restartDialog by mutableStateOf(false)
-    var gamePlaying by mutableStateOf(false)
-    var endGame by mutableStateOf(false)
+
+    private val _gameStatusState = MutableStateFlow(GameStatusState())
+    val gameStatusState = _gameStatusState.asStateFlow()
+
     private lateinit var timer: Timer
     private var duration = Duration.ZERO
     var timeText by mutableStateOf("00:00")
 
     fun startTimer() {
-        if (!gamePlaying) {
-            gamePlaying = true
+        if (_gameStatusState.value.status != GameStatus.RUNNING) {
+            _gameStatusState.update { it.copy(status = GameStatus.RUNNING) }
             val updateRate = 50L
 
             timer = fixedRateTimer(initialDelay = updateRate, period = updateRate) {
@@ -150,7 +156,7 @@ class GameViewModel @Inject constructor(
     }
 
     fun pauseTimer() {
-        gamePlaying = false
+        _gameStatusState.update { it.copy(status = GameStatus.PAUSE) }
         timer.cancel()
     }
 
@@ -159,7 +165,9 @@ class GameViewModel @Inject constructor(
         duration = savedGame.timer.toKotlinDuration()
         timeText = duration.toFormattedString()
 
-        gameBoard = parseToGameBoard(savedGame.savedBoard)
+        _gameboardState.update {
+            it.copy(gameBoard = parseToGameBoard(savedGame.savedBoard))
+        }
 
 //        for (i in gameBoard.indices) {
 //            for (j in gameBoard[0].indices) {
@@ -169,11 +177,11 @@ class GameViewModel @Inject constructor(
 
     private fun saveGame() {
         val savedGame = getSavedGameUseCase(boardEntity.uid)
-        saveGameUseCase(savedGame, gameBoard, duration, boardEntity)
+        saveGameUseCase(savedGame, _gameboardState.value.gameBoard, duration, boardEntity)
     }
 
     fun processInput(cell: Cell, remainingUse: Boolean, longTap: Boolean = false): Boolean {
-        if (gamePlaying) {
+        if (_gameStatusState.value.status == GameStatus.RUNNING) {
             currentCell = if (currentCell.row == cell.row && currentCell.column == cell.column
                 && digitFirstNumber == 0) {
                 Cell(-1, -1)
@@ -238,7 +246,7 @@ class GameViewModel @Inject constructor(
 
     fun processKeyboardInput(number: Int) {
 //        digitFirstNumber = number
-        if (gamePlaying) {
+        if (_gameStatusState.value.status == GameStatus.RUNNING) {
             if (inputMethod.value == 0 && !currentCell.locked && currentCell.column >= 0
                 && currentCell.row >= 0) {
 //              overrideInputMethodDF = false
@@ -258,7 +266,9 @@ class GameViewModel @Inject constructor(
     }
 
     private fun processNumberInput(number: Int) {
-        if (currentCell.row > -1 && currentCell.column > -1 && gamePlaying && !currentCell.locked) {
+        if (currentCell.row > -1 && currentCell.column > -1
+            && _gameStatusState.value.status == GameStatus.RUNNING
+            && !currentCell.locked) {
             gameBoard.setValue(currentCell.row, currentCell.column, number)
             remainingUsesList = countRemainingUses(gameBoard)
         }
