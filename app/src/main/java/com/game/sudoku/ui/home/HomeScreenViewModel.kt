@@ -6,13 +6,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.game.sudoku.core.parser.SudokuParser
-import com.game.sudoku.data.datastore.model.SavedGame
-import com.game.sudoku.data.datastore.model.SudokuBoardModel
-import com.game.sudoku.domain.GameBoard
-import com.game.sudoku.domain.repository.BoardRepository
-import com.game.sudoku.domain.repository.SavedGameRepository
-import com.game.sudoku.ui.core.Cell
+import com.mohitsatr.domain.GameBoard
+import com.mohitsatr.domain.repository.BoardRepository
+import com.mohitsatr.domain.repository.SavedGameRepository
+import com.mohitsatr.domain.repository.SudokuBoardModel
+import com.mohitsatr.ui.theme.ToggleThemeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.ilikeyourhat.kudoku.generating.defaultGenerator
 import io.github.ilikeyourhat.kudoku.model.Sudoku
@@ -42,12 +40,12 @@ class HomeViewModel
     var readyToPlay by mutableStateOf(false)
 
 
-//    val lastGames = savedGameRepository.getLastPlayable(5)
-//        .stateIn(
-//            scope = viewModelScope,
-//            started = SharingStarted.Eagerly,
-//            initialValue =
-//        )
+    val lastGames = savedGameRepository.getLast(5)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = emptyMap()
+        )
 
     fun toggleTheme() = viewModelScope.launch { toggleThemeUseCase() }
 

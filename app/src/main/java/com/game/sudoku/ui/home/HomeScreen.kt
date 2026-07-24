@@ -22,8 +22,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,13 +52,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.game.sudoku.LocalBoardColors
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.game.sudoku.R
-import com.game.sudoku.ui.theme.SudokuTheme
+import com.mohitsatr.domain.repository.SavedGameModel
+import com.mohitsatr.domain.repository.SudokuBoardModel
+import com.mohitsatr.ui.SudokuBoardColors.LocalBoardColors
+import com.mohitsatr.ui.theme.SudokuTheme
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
-import com.ramcosta.composedestinations.generated.destinations.GameScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlin.collections.emptyMap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnrememberedMutableState")
@@ -71,19 +75,16 @@ fun HomeScreen(
     Log.d("rop", viewModel.readyToPlay.toString())
 
     var continueLastGame by remember { mutableStateOf(false) }
-//    val lastGames = viewModel.lastGames.collectAsStateWithLifecycle(emptyMap())
-//    val lastGamesSize = lastGames.value.size
-
-//    val lastGames1 by viewModel.lastGames.collectAsStateWithLifecycle(initialValue = emptyMap())
+    val lastGames = viewModel.lastGames.collectAsStateWithLifecycle(emptyMap())
 
     LaunchedEffect(viewModel.readyToPlay) {
         if (viewModel.readyToPlay && viewModel.insertedBoardUid != -1L) {
-            navigator.navigate(
-                GameScreenDestination(
-                    gameUid = viewModel.insertedBoardUid,
-                    playedBefore = false,
-                )
-            )
+//            navigator.navigate(
+//                GameScreenDestination(
+//                    gameUid = viewModel.insertedBoardUid,
+//                    playedBefore = false,
+//                )
+//            )
             viewModel.readyToPlay = false
         }
     }
@@ -93,17 +94,18 @@ fun HomeScreen(
         onContinueOldGameClick = { continueLastGame = true },
         onContinueLastDialogDismissed = { continueLastGame = false },
         resumeGame = { uid ->
-            navigator.navigate(
-                GameScreenDestination(
-                    gameUid = uid,
-                    playedBefore = true
-                )
-            )
+//            navigator.navigate(
+//                GameScreenDestination(
+//                    gameUid = uid,
+//                    playedBefore = true
+//                )
+//            )
             continueLastGame = false
         },
         isContinueLastGame = continueLastGame,
         isGenerating = viewModel.isGenerating,
         isSolving = viewModel.isSolving,
+        lastGames = lastGames,
         onThemeIconClick = { viewModel.toggleTheme() }
     )
 }
@@ -120,6 +122,7 @@ fun HomeScreenContent(
     isSolving: Boolean,
     onContinueLastDialogDismissed: () -> Unit,
     resumeGame: (Long) -> Unit,
+    lastGames: State<Map<SavedGameModel, SudokuBoardModel>>,
 ) {
     val localColors = LocalBoardColors.current
     val newGameButtonInteractionSource = remember { MutableInteractionSource() }
@@ -133,7 +136,6 @@ fun HomeScreenContent(
         Box(
             modifier = Modifier
                 .padding(paddingValues)
-//                .background(localColors.backgroundColor)
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
@@ -141,7 +143,8 @@ fun HomeScreenContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                val isNewButtonPressed = isGenerating || newGameButtonInteractionSource.collectIsPressedAsState().value
+                val isNewButtonPressed =
+                    isGenerating || newGameButtonInteractionSource.collectIsPressedAsState().value
                 GameButton(
                     "Start New Game",
                     isNewButtonPressed,
@@ -150,7 +153,8 @@ fun HomeScreenContent(
                     onStartNewGameClick()
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                val isResumeButtonPressed = isContinueLastGame || continueButtonInteractionSource.collectIsPressedAsState().value
+                val isResumeButtonPressed =
+                    isContinueLastGame || continueButtonInteractionSource.collectIsPressedAsState().value
                 GameButton(
                     "Resume",
                     isResumeButtonPressed,
@@ -160,21 +164,27 @@ fun HomeScreenContent(
                 }
             }
 
+            val games = lastGames.value.toList()
+            games.forEachIndexed { index,pair ->
+                Log.d("getting last games ", "$index $pair")
+            }
             if (isContinueLastGame) {
                 ModalBottomSheet(
                     onDismissRequest = onContinueLastDialogDismissed,
                 ) {
-                    Text("Showing last $ games")
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(2) {
-                            Button(
-                                onClick = { resumeGame(it.toLong()) }
-                            ) {
-//                            Text(text = "Last Played: ${it.first.lastPlayed.toString()} for ${it.first.timer} in ${it.second.difficulty.name} mode")
-                            }
-                        }
+                       items(items = games, key = { it.first.uid }) { savedGame ->
+                           Text(
+                               text = savedGame.first.lastPlayed.toString()
+                           )
+                           LastGameCard(
+                               lastPlayed = savedGame.first.lastPlayed.toString(),
+                               duration = savedGame.first.timer.toString(),
+                               savedBoard = savedGame.second.initialBoard,
+                           ) {}
+                       }
                     }
                 }
             }
@@ -309,6 +319,7 @@ fun GeneratingDialog(
     }
 }
 
+@SuppressLint("UnrememberedMutableState")
 @Preview
 @Composable
 fun MainMenuPreview() {
@@ -316,12 +327,13 @@ fun MainMenuPreview() {
         HomeScreenContent(
             onStartNewGameClick = {},
             onContinueOldGameClick = {},
+            onThemeIconClick = {},
             isContinueLastGame = false,
             isGenerating = false,
             isSolving = false,
             onContinueLastDialogDismissed = {},
             resumeGame = {},
-            onThemeIconClick = {}
+            lastGames = mutableStateOf(emptyMap())
         )
     }
 }

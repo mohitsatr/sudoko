@@ -24,3 +24,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Sudoku"
 include(":app")
+include(":game")
+include(":core:domain")
+include(":core:data")
+include(":core:ui")

@@ -6,7 +6,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import com.game.sudoku.data.datastore.AppSettingsManager
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -169,7 +168,6 @@ fun WelcomeScreen(
 @HiltViewModel
 class WelcomeViewModel
 @Inject constructor(
-    private val settingsDataManager: AppSettingsManager
 ) : ViewModel() {
 //    var selectedCell by mutableStateOf(Cell(-1, -1, 0))
 //
