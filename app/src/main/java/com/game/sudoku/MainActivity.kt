@@ -1,36 +1,35 @@
 package com.game.sudoku
 
 import android.app.Activity
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
+import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navOptions
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.ui.NavDisplay
+import com.game.sudoku.ui.home.HomeScreen
+import com.mohitsatr.game.ui.game.GameScreen
 import com.mohitsatr.ui.SudokuBoardColors.DarkBlueThemeSudokuColorsImpl
 import com.mohitsatr.ui.SudokuBoardColors.DarkGreenThemeSudokuColorsImpl
 import com.mohitsatr.ui.SudokuBoardColors.LightRedThemeSudokuColorsImpl
 import com.mohitsatr.ui.SudokuBoardColors.LightThemeSudokuColorsImpl
 import com.mohitsatr.ui.SudokuBoardColors.LocalBoardColors
-import com.mohitsatr.ui.SudokuBoardColors.SudokuColors
 import com.mohitsatr.ui.theme.SudokuTheme
 import dagger.hilt.android.AndroidEntryPoint
-
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -75,8 +74,6 @@ class MainActivity : ComponentActivity() {
 //                }
 //            }
 
-//            val mainViewModel: MainActivityViewModel = hiltViewModel()
-//            val themeIndex = mainViewModel.themeIndex.collectAsStateWithLifecycle()
             val view = LocalView.current
 
             val gameTheme = when (1) {
@@ -99,58 +96,30 @@ class MainActivity : ComponentActivity() {
 
             CompositionLocalProvider(LocalBoardColors provides gameTheme) {
                 SudokuTheme {
-                    val navController = rememberNavController()
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val backStack = remember { mutableStateListOf<SudokuNavKey>(SudokuNavKey.Home) }
 
-                    var bottomBarStack by rememberSaveable { mutableStateOf(false) }
-
-//                    LaunchedEffect(navBackStackEntry) {
-//                        bottomBarStack = when (navBackStackEntry?.destination?.route) {
-//                            GameScreenDestination.route -> true
-//                            else -> false
-//                        }
-//                    }
-
-                    LaunchedEffect(true) {
-                        if (true) {
-                            navController.navigate(
-                                route = "",
-                                navOptions = navOptions {
-//                                    popUpTo() {
-//                                        inclusive = true
-//                                    }
-                                }
-                            )
+                    NavDisplay(
+                        backStack = backStack,
+                        onBack = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) },
+                        entryProvider = entryProvider {
+                            entry<SudokuNavKey.Home> {
+                                HomeScreen(
+                                    onNavigateToGame = { uid, playedBefore ->
+                                        backStack.add(SudokuNavKey.Game(uid, playedBefore))
+                                    }
+                                )
+                            }
+                            entry<SudokuNavKey.Game> { key ->
+                                GameScreen(
+                                    gameUid = key.gameUid,
+                                    playedBefore = key.playedBefore,
+                                    onBack = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) }
+                                )
+                            }
                         }
-                    }
-//                    DestinationsNavHost(
-//                        navGraph = NavGraphs.root,
-//                        navController = navController,
-//                    )
+                    )
                 }
             }
         }
     }
-}
-
-//@HiltViewModel
-//class MainActivityViewModel
-//@Inject constructor(
-//    val themeSettingsManager: ThemeSettingsManager,
-//    appSettingsManager: AppSettingsManager,
-//) : ViewModel() {
-//
-//
-//    val themeIndex = themeSettingsManager.themeIndex.stateIn(
-//        scope = viewModelScope,
-//        started = SharingStarted.WhileSubscribed(5000),
-//        initialValue = 0
-//    )
-//
-//}
-
-sealed interface HomeScreenUiState {
-    data object Loading : HomeScreenUiState
-    data class Success(val theme: Int) : HomeScreenUiState
-
 }

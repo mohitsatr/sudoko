@@ -8,13 +8,10 @@ plugins {
 
 android {
     namespace = "com.mohitsatr.game"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24
-        targetSdk = 36
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,11 +30,11 @@ android {
         compose = true
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 }
 
@@ -53,10 +50,6 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.fragment)
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hiltCompiler)
-
-    // Navigation
-    implementation(libs.compose.destination)
-    ksp(libs.compose.destination.ksp)
 
     implementation(platform(libs.androidx.compose.bom))
 

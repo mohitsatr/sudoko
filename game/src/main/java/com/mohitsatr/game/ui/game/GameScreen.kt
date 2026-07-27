@@ -61,32 +61,33 @@ import com.mohitsatr.game.ui.game.components.GameMenu
 import com.mohitsatr.game.ui.game.components.board.DrawGameBoard
 import com.mohitsatr.ui.SudokuBoardColors.LocalBoardColors
 import com.mohitsatr.ui.theme.SudokuTheme
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
 @RequiresApi(Build.VERSION_CODES.O)
-//@Destination<RootGraph>(
-//    style = AnimatedNavigation::class,
-//    navArgs = GameScreenNavArgs::class
-//)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameScreen(
+    gameUid: Long,
+    playedBefore: Boolean,
+    onBack: () -> Unit,
     viewModel: GameViewModel = hiltViewModel(),
-    navigator: DestinationsNavigator,
 ) {
     val localView = LocalView.current // for vibration
+
+    // Inject parameters into ViewModel if needed, or rely on ViewModel to handle it via a 'load' method.
+    // Given the current ViewModel structure, we might need a way to pass these args.
+    // For now, let's assume the ViewModel can be initialized or has a way to receive these.
+    
+    LaunchedEffect(gameUid, playedBefore) {
+        viewModel.loadGame(gameUid, playedBefore)
+    }
+
     var restartButtonAngleState by remember { mutableFloatStateOf(0f) }
     val restartButtonAnimation: Float by animateFloatAsState(
         targetValue = restartButtonAngleState,
         animationSpec = tween(durationMillis = 250), label = "restartButtonAnimation"
     )
-//    val mistakeLimit by viewModel.mistakeLimit.collectAsStateWithLifecycle(
-//        initialValue = PreferencesConstants.DEFAULT_MISTAKES_LIMIT
-//    )
-//    val errorHighlight by viewModel.mistakesMethod.collectAsStateWithLifecycle(
-//        initialValue = PreferencesConstants.DEFAULT_HIGHLIGHT_MISTAKES
-//    )
-    val remainingUse = false // by viewModel.remainingUse.collectAsStateWithLifecycle(initialValue = false)
+
+    val remainingUse = false 
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // without this, timer won't start when board is loaded
@@ -124,7 +125,7 @@ fun GameScreen(
         solvedBoard = viewModel.solvedBoard,
         curCell = viewModel.currentCell,
         timeText = viewModel.timeText,
-        onBackClick = { navigator.popBackStack() },
+        onBackClick = onBack,
         onPauseButtonClick = {
             if (!viewModel.gamePlaying) viewModel.startTimer() else viewModel.pauseTimer()
             viewModel.currentCell = Cell(-1, -1, 0)

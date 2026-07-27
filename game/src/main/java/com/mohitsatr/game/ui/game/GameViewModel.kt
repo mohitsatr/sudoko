@@ -17,7 +17,7 @@ import com.mohitsatr.domain.GameBoard
 import com.mohitsatr.domain.GameBoard.Companion.parseToGameBoard
 import com.mohitsatr.domain.repository.SavedGameModel
 import com.mohitsatr.domain.repository.SudokuBoardModel
-import com.mohitsatr.domain.repository.ThemeRepository
+import com.mohitsatr.domain.repository.ThemeManager
 import com.mohitsatr.domain.usecase.GetBoardUseCase
 import com.mohitsatr.domain.usecase.GetSavedGameUseCase
 import com.mohitsatr.domain.usecase.SaveGameUseCase
@@ -25,8 +25,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.ilikeyourhat.kudoku.rating.Difficulty
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Timer
@@ -39,7 +37,7 @@ import kotlin.time.toKotlinDuration
 @RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class GameViewModel @Inject constructor(
-    themeRepository: ThemeRepository,
+    themeManager: ThemeManager,
     savedStateHandle: SavedStateHandle,
     private val getBoardUseCase: GetBoardUseCase,
     private val saveGameUseCase: SaveGameUseCase,
@@ -47,24 +45,22 @@ class GameViewModel @Inject constructor(
 ) : ViewModel() {
     init {
         val navArgs: GameScreenNavArgs? = savedStateHandle.get<GameScreenNavArgs>("args")
-        val continueSaved = navArgs?.playedBefore
+        if (navArgs != null) {
+            loadGame(navArgs.gameUid, navArgs.playedBefore)
+        }
+    }
 
+    fun loadGame(gameUid: Long, playedBefore: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            boardEntity = getBoardUseCase(navArgs?.gameUid ?: 0)
+            boardEntity = getBoardUseCase(gameUid)
             val savedGame = getSavedGameUseCase(boardEntity.uid)
             withContext(Dispatchers.Default) {
                 initialBoard = parseToGameBoard(boardEntity.initialBoard)
                 gameDifficulty = boardEntity.difficulty
-
-//                initialBoard.forEach { cells ->
-//                    cells.forEach { cell ->
-//                        cell.locked = cell.value != 0
-//                    }
-//                }
             }
 
             withContext(Dispatchers.Main) {
-                if (savedGame != null && continueSaved == true) {
+                if (savedGame != null && playedBefore) {
                      restoreSavedGame(savedGame)
                 }
                 else {

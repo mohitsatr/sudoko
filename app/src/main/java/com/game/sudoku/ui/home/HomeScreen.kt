@@ -58,18 +58,14 @@ import com.mohitsatr.domain.repository.SavedGameModel
 import com.mohitsatr.domain.repository.SudokuBoardModel
 import com.mohitsatr.ui.SudokuBoardColors.LocalBoardColors
 import com.mohitsatr.ui.theme.SudokuTheme
-import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.annotation.RootGraph
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlin.collections.emptyMap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnrememberedMutableState")
-@Destination<RootGraph>(start = true)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    navigator: DestinationsNavigator,
+    onNavigateToGame: (Long, Boolean) -> Unit,
 ) {
 
     Log.d("rop", viewModel.readyToPlay.toString())
@@ -79,12 +75,7 @@ fun HomeScreen(
 
     LaunchedEffect(viewModel.readyToPlay) {
         if (viewModel.readyToPlay && viewModel.insertedBoardUid != -1L) {
-//            navigator.navigate(
-//                GameScreenDestination(
-//                    gameUid = viewModel.insertedBoardUid,
-//                    playedBefore = false,
-//                )
-//            )
+            onNavigateToGame(viewModel.insertedBoardUid, false)
             viewModel.readyToPlay = false
         }
     }
@@ -94,12 +85,7 @@ fun HomeScreen(
         onContinueOldGameClick = { continueLastGame = true },
         onContinueLastDialogDismissed = { continueLastGame = false },
         resumeGame = { uid ->
-//            navigator.navigate(
-//                GameScreenDestination(
-//                    gameUid = uid,
-//                    playedBefore = true
-//                )
-//            )
+            onNavigateToGame(uid, true)
             continueLastGame = false
         },
         isContinueLastGame = continueLastGame,

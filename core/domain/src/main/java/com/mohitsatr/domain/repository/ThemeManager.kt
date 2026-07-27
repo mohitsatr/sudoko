@@ -1,5 +1,5 @@
 package com.mohitsatr.domain.repository
 
-interface ThemeRepository {
+interface ThemeManager {
 
 }

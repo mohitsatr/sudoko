@@ -6,14 +6,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 
 @Composable
 fun WelcomeScreen(
     viewModel: WelcomeViewModel = hiltViewModel(),
-    navigator: DestinationsNavigator
 ) {
     val context = LocalContext.current
 //    val currentLanguage by remember {

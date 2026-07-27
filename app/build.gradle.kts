@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.game.sudoku"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.game.sudoku"
@@ -23,12 +23,6 @@ android {
         }
     }
 
-    applicationVariants.all {
-        addJavaSourceFoldersToModel(
-            File(buildDir, "generated/ksp/$name/kotlin")
-        )
-    }
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -39,11 +33,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -66,6 +60,12 @@ dependencies {
 
     implementation(project(":core:ui"))
     implementation(project(":core:domain"))
+    implementation(project(":game"))
+
+
+    // Nav3
+    implementation("androidx.navigation3:navigation3-runtime:1.2.0-alpha06")
+    implementation("androidx.navigation3:navigation3-ui:1.2.0-alpha06")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -88,10 +88,6 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     ksp(libs.hiltCompiler)
-
-    // navigation
-    implementation(libs.compose.destination)
-    ksp(libs.compose.destination.ksp)
 
     implementation(libs.kudoku.parser)
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")

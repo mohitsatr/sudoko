@@ -8,9 +8,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.navigation.NavBackStackEntry
-import com.ramcosta.composedestinations.spec.DestinationStyle
 
-object AnimatedNavigation : DestinationStyle.Animated() {
+object AnimatedNavigation {
 
     fun AnimatedContentTransitionScope<NavBackStackEntry>.enterTransition(): EnterTransition {
         return fadeIn(animationSpec = tween(220, delayMillis = 90)) +

@@ -2,10 +2,6 @@ package com.mohitsatr.game.ui.game.components.board
 
 import android.graphics.Paint
 import android.util.Log
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -17,10 +13,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.tooling.preview.Preview
-import com.game.sudoku.domain.GameBoard
-import com.game.sudoku.ui.core.Cell
-
+import com.mohitsatr.domain.Cell
+import com.mohitsatr.domain.GameBoard
 
 fun DrawScope.drawRoundCell(
     row: Int,

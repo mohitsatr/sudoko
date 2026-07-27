@@ -34,11 +34,11 @@ fun SudokuTheme(
     content: @Composable () -> Unit,
 ) {
 
-//    MaterialTheme(
-//        colorScheme = SudokuLightTheme,
-//        typography = Typography,
-//        content = content
-//    )
+    MaterialTheme(
+        colorScheme = SudokuLightTheme,
+        typography = Typography,
+        content = content
+    )
 }
 
 val SudokuLightTheme = lightColorScheme(

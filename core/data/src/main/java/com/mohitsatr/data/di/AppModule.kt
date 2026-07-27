@@ -8,8 +8,10 @@ import com.mohitsatr.data.datastore.dao.BoardDao
 import com.mohitsatr.data.datastore.repository.BoardRepositoryImpl
 import com.mohitsatr.data.datastore.repository.SavedGameRepositoryImpl
 import com.mohitsatr.data.di.datastore.dao.SavedGameDao
+import com.mohitsatr.data.impl.DefaultThemeManager
 import com.mohitsatr.domain.repository.BoardRepository
 import com.mohitsatr.domain.repository.SavedGameRepository
+import com.mohitsatr.domain.repository.ThemeManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,6 +33,11 @@ class AppModule {
     @Singleton
     fun providesThemeSettingsManager(@ApplicationContext context: Context) =
     ThemeSettingsManager(context)
+
+    @Provides
+    @Singleton
+    fun providesThemeManager(themeSettingsManager: ThemeSettingsManager): ThemeManager =
+        DefaultThemeManager(themeSettingsManager)
 
     @Singleton
     @Provides
