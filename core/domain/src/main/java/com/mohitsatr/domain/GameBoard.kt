@@ -1,5 +1,6 @@
 package com.mohitsatr.domain
 
+import android.util.Log
 import io.github.ilikeyourhat.kudoku.model.Sudoku
 import io.github.ilikeyourhat.kudoku.type.Classic9x9
 
@@ -73,23 +74,19 @@ data class GameBoard (
         val EMPTY_SEPARATORS = listOf('0', '.', '-', '_')
 
         fun parseToGameBoard(
-            board: String,
+            boardString: String,
             gameType: Classic9x9 = Classic9x9,
             locked: Boolean = false,
             emptySeparator: Char? = null
         ): GameBoard {
 
+            Log.d("GameBoard", "BoardString $boardString")
             val result = GameBoard(gameType.sizeX, gameType.sizeY)
 
-            for (i in board.indices) {
-                val value = if (emptySeparator != null) {
-                    if (board[i] == emptySeparator) 0 else boardDigitToInt(board[i])
-                } else {
-                    if (board[i] in EMPTY_SEPARATORS) 0 else boardDigitToInt(board[i])
-                }
-
-                result.setValue(i / gameType.sizeX, i % gameType.sizeX, value)
-                result.setLocked(i / gameType.sizeX, i % gameType.sizeX, locked)
+            boardString.forEachIndexed { index, ch ->
+                val value = if (ch in EMPTY_SEPARATORS) 0 else boardDigitToInt(ch)
+                result.setValue(index / gameType.sizeX, index % gameType.sizeX, value)
+                result.setLocked(index / gameType.sizeX, index % gameType.sizeX, locked)
             }
             return result
         }
@@ -106,5 +103,12 @@ data class GameBoard (
 }
 
 private fun boardDigitToInt(char: Char, radix: Int = 13): Int {
-    return char.digitToInt(radix)
+    Log.d("GameBoard", "Converting $char")
+
+    return if (char !in '0'..'9') {
+        0
+    }
+    else {
+        char.digitToInt(radix)
+    }
 }

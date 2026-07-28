@@ -239,10 +239,6 @@ fun DrawGameBoard(
 
 }
 
-const val fakeGameString =
-    "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
-val fakeGameBoard = parseToGameBoard(fakeGameString)
-val fakeBoardColors = LightThemeSudokuColorsImpl()
 
 fun DrawScope.SingleCell(
     textMeasurer: TextMeasurer,
@@ -285,6 +281,11 @@ fun DrawScope.SingleCell(
 @Preview
 @Composable
 fun SingleCellPreview() {
+
+    val fakeGameString =
+        "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
+    val fakeGameBoard = parseToGameBoard(fakeGameString)
+    val fakeBoardColors = LightThemeSudokuColorsImpl()
     SudokuTheme {
         var nonSelectedNumberPaint by remember(20f) {
             mutableStateOf(Paint().apply {
@@ -321,6 +322,10 @@ fun SingleCellPreview() {
 @Composable
 fun GameBoardPreview() {
     val emptyBoard = GameBoard()
+    val fakeGameString =
+        "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
+    val fakeGameBoard = parseToGameBoard(fakeGameString)
+    val fakeBoardColors = LightThemeSudokuColorsImpl()
     SudokuTheme {
         DrawGameBoard(
             board = fakeGameBoard,

@@ -18,7 +18,7 @@ import com.mohitsatr.domain.GameBoard.Companion.parseToGameBoard
 import com.mohitsatr.domain.repository.SavedGameModel
 import com.mohitsatr.domain.repository.SudokuBoardModel
 import com.mohitsatr.domain.repository.ThemeManager
-import com.mohitsatr.domain.usecase.GetBoardUseCase
+import com.mohitsatr.domain.usecase.GetBoardModelUseCase
 import com.mohitsatr.domain.usecase.GetSavedGameUseCase
 import com.mohitsatr.domain.usecase.SaveGameUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,7 +39,7 @@ import kotlin.time.toKotlinDuration
 class GameViewModel @Inject constructor(
     themeManager: ThemeManager,
     savedStateHandle: SavedStateHandle,
-    private val getBoardUseCase: GetBoardUseCase,
+    private val getBoardModelUseCase: GetBoardModelUseCase,
     private val saveGameUseCase: SaveGameUseCase,
     private val getSavedGameUseCase: GetSavedGameUseCase,
 ) : ViewModel() {
@@ -52,11 +52,12 @@ class GameViewModel @Inject constructor(
 
     fun loadGame(gameUid: Long, playedBefore: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            boardEntity = getBoardUseCase(gameUid)
-            val savedGame = getSavedGameUseCase(boardEntity.uid)
+            sudokuBoardModel = getBoardModelUseCase(gameUid)
+            val savedGame = getSavedGameUseCase(sudokuBoardModel.uid)
+            Log.d("GameViewMode", "$savedGame.uid $gameUid")
             withContext(Dispatchers.Default) {
-                initialBoard = parseToGameBoard(boardEntity.initialBoard)
-                gameDifficulty = boardEntity.difficulty
+                initialBoard = parseToGameBoard(sudokuBoardModel.initialBoard)
+                gameDifficulty = sudokuBoardModel.difficulty
             }
 
             withContext(Dispatchers.Main) {
@@ -73,7 +74,7 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    private lateinit var boardEntity: SudokuBoardModel
+    private lateinit var sudokuBoardModel: SudokuBoardModel
     private lateinit var initialBoard: GameBoard
 
     var solvedBoard = GameBoard()
@@ -151,10 +152,10 @@ class GameViewModel @Inject constructor(
     }
 
     private fun restoreSavedGame(savedGameModel: SavedGameModel) {
-        Log.d("restoreSavedGame", "Game restored: Game:${savedGameModel.uid} Board ${boardEntity.uid}")
         duration = savedGameModel.timer.toKotlinDuration()
         timeText = duration.toFormattedString()
 
+        Log.d("GameViewModel", "Restoring: ${savedGameModel.savedBoard}")
         gameBoard = parseToGameBoard(savedGameModel.savedBoard)
 
 //        for (i in gameBoard.indices) {
@@ -164,8 +165,8 @@ class GameViewModel @Inject constructor(
     }
 
     private fun saveGame() {
-        val savedGame = getSavedGameUseCase(boardEntity.uid)
-        saveGameUseCase(savedGame, gameBoard, duration, boardEntity)
+        val savedGame = getSavedGameUseCase(sudokuBoardModel.uid)
+        saveGameUseCase(savedGame, gameBoard, duration, sudokuBoardModel)
     }
 
     fun processInput(cell: Cell, remainingUse: Boolean, longTap: Boolean = false): Boolean {

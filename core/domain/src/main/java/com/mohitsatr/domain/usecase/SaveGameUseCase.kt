@@ -11,7 +11,7 @@ import java.time.ZonedDateTime
 import javax.inject.Inject
 import kotlin.time.Duration
 
-const val TAG = "SaveGame"
+const val TAG = "SaveGameUseCase"
 
 class SaveGameUseCase @Inject constructor(
     val savedGameRepository: SavedGameRepository
@@ -21,27 +21,27 @@ class SaveGameUseCase @Inject constructor(
         savedGameModel: SavedGameModel?,
         gameBoard: GameBoard,
         duration: Duration,
-        boardEntity: SudokuBoardModel
+        sudokuBoardModel: SudokuBoardModel
     ) {
         if (savedGameModel != null) {
             savedGameRepository.update(
                 savedGameModel.copy(
                     timer = java.time.Duration.ofSeconds(duration.inWholeSeconds),
-                    savedBoard = gameBoard.toString(),
+                    savedBoard = gameBoard.asString(),
                     lastPlayed = ZonedDateTime.now()
                 )
             )
-            Log.d(TAG, "Game updated: Game:${savedGameModel.uid} Board ${boardEntity.uid}")
+            Log.d(TAG, "Game updated: Game:${savedGameModel.uid} Board ${sudokuBoardModel.uid}")
         }
         else {
             val game = SavedGameModel(
-                uid = boardEntity.uid,
-                savedBoard = gameBoard.toString(),
+                uid = sudokuBoardModel.uid,
+                savedBoard = gameBoard.asString(),
                 timer = java.time.Duration.ofSeconds(duration.inWholeSeconds),
                 lastPlayed = ZonedDateTime.now(),
             )
             savedGameRepository.insert(game)
-            Log.d(TAG, "Game inserted: Game:${game.uid} Board ${boardEntity.uid}")
+            Log.d(TAG, "Game inserted: Game:${game.uid} Board ${sudokuBoardModel.uid}")
         }
     }
 }

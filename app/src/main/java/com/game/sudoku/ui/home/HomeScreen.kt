@@ -71,7 +71,7 @@ fun HomeScreen(
     Log.d("rop", viewModel.readyToPlay.toString())
 
     var continueLastGame by remember { mutableStateOf(false) }
-    val lastGames = viewModel.lastGames.collectAsStateWithLifecycle(emptyMap())
+    val savedGames = viewModel.lastGames.collectAsStateWithLifecycle(emptyMap())
 
     LaunchedEffect(viewModel.readyToPlay) {
         if (viewModel.readyToPlay && viewModel.insertedBoardUid != -1L) {
@@ -91,7 +91,7 @@ fun HomeScreen(
         isContinueLastGame = continueLastGame,
         isGenerating = viewModel.isGenerating,
         isSolving = viewModel.isSolving,
-        lastGames = lastGames,
+        savedGames = savedGames,
         onThemeIconClick = { viewModel.toggleTheme() }
     )
 }
@@ -108,7 +108,7 @@ fun HomeScreenContent(
     isSolving: Boolean,
     onContinueLastDialogDismissed: () -> Unit,
     resumeGame: (Long) -> Unit,
-    lastGames: State<Map<SavedGameModel, SudokuBoardModel>>,
+    savedGames: State<Map<SavedGameModel, SudokuBoardModel>>,
 ) {
     val localColors = LocalBoardColors.current
     val newGameButtonInteractionSource = remember { MutableInteractionSource() }
@@ -150,10 +150,6 @@ fun HomeScreenContent(
                 }
             }
 
-            val games = lastGames.value.toList()
-            games.forEachIndexed { index,pair ->
-                Log.d("getting last games ", "$index $pair")
-            }
             if (isContinueLastGame) {
                 ModalBottomSheet(
                     onDismissRequest = onContinueLastDialogDismissed,
@@ -161,16 +157,21 @@ fun HomeScreenContent(
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                       items(items = games, key = { it.first.uid }) { savedGame ->
-                           Text(
-                               text = savedGame.first.lastPlayed.toString()
-                           )
-                           LastGameCard(
-                               lastPlayed = savedGame.first.lastPlayed.toString(),
-                               duration = savedGame.first.timer.toString(),
-                               savedBoard = savedGame.second.initialBoard,
-                           ) {}
-                       }
+                        items(items = savedGames.value.toList(), key = { it.first.uid }) { item ->
+                            val gameInfo = item.first
+                            val boardInfo = item.second
+                            LastGameCard(
+                                lastPlayed = gameInfo.lastPlayed.toString(),
+                                duration = gameInfo.timer.toString(),
+                                savedBoard = ""
+                            ) {
+                                resumeGame(gameInfo.uid)
+                            }
+                            Log.d(
+                                "getting last games ",
+                                "${gameInfo.lastPlayed} on for #${gameInfo.timer.toString()}"
+                            )
+                        }
                     }
                 }
             }
@@ -319,7 +320,7 @@ fun MainMenuPreview() {
             isSolving = false,
             onContinueLastDialogDismissed = {},
             resumeGame = {},
-            lastGames = mutableStateOf(emptyMap())
+            savedGames = mutableStateOf(emptyMap())
         )
     }
 }
