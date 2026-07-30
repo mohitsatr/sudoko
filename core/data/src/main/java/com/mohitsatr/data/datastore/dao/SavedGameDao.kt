@@ -2,6 +2,7 @@ package com.mohitsatr.data.di.datastore.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.mohitsatr.data.di.datastore.model.SavedGameEntity
@@ -12,19 +13,25 @@ import kotlinx.coroutines.flow.Flow
 interface SavedGameDao {
 
     @Query("SELECT * FROM savedGame WHERE board_uid == :boardUid")
-    fun get(boardUid: Long): SavedGameEntity?
-
-    @Insert
-    fun insert(savedGame: SavedGameEntity)
-
-    @Update
-    fun update(game: SavedGameEntity)
+    suspend fun get(boardUid: Long): SavedGameEntity?
 
     @Query("""
-        SELECT * FROM savedGame 
-        JOIN boardModel ON savedGame.board_uid = boardModel.uid 
+        SELECT * FROM savedGame
+        ORDER BY lastPlayed DESC 
+        LIMIT :limit
+    """)
+    fun get(limit: Int): Flow<List<SavedGameEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(savedGame: SavedGameEntity): Long
+
+    @Update
+    suspend fun update(game: SavedGameEntity)
+
+    @Query("""
+        SELECT * FROM savedGame
         ORDER BY lastPlayed DESC 
         LIMIT :last
     """)
-    fun getLast(last: Int): Flow<Map<SavedGameEntity, SudokuBoardEntity>>
+    fun getLast(last: Int): Flow<List<SavedGameEntity>>
 }

@@ -51,7 +51,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mohitsatr.domain.Cell
 import com.mohitsatr.domain.GameBoard
 import com.mohitsatr.domain.GameBoard.Companion.parseToGameBoard
@@ -73,10 +72,6 @@ fun GameScreen(
 ) {
     val localView = LocalView.current // for vibration
 
-    // Inject parameters into ViewModel if needed, or rely on ViewModel to handle it via a 'load' method.
-    // Given the current ViewModel structure, we might need a way to pass these args.
-    // For now, let's assume the ViewModel can be initialized or has a way to receive these.
-    
     LaunchedEffect(gameUid, playedBefore) {
         viewModel.loadGame(gameUid, playedBefore)
     }
@@ -121,11 +116,11 @@ fun GameScreen(
         remainingUsesList = viewModel.remainingUsesList,
         remainingUse = remainingUse,
         showSolution = viewModel.showSolution,
-        unSolvedBoard = viewModel.gameBoard,
+        unSolvedBoard = viewModel.inGameBoard,
         solvedBoard = viewModel.solvedBoard,
         curCell = viewModel.currentCell,
         timeText = viewModel.timeText,
-        onBackClick = onBack,
+        onBackClick = onBack(),
         onPauseButtonClick = {
             if (!viewModel.gamePlaying) viewModel.startTimer() else viewModel.pauseTimer()
             viewModel.currentCell = Cell(-1, -1, 0)

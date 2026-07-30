@@ -18,7 +18,7 @@ import com.mohitsatr.data.datastore.model.SudokuBoardEntity
 
 @Database(
     entities = [SavedGameEntity::class, SudokuBoardEntity::class, FolderEntity::class],
-    version = 4,
+    version = 7,
     autoMigrations = [],
     exportSchema = false
 )

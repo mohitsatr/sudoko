@@ -16,7 +16,6 @@ import com.mohitsatr.domain.Cell
 import com.mohitsatr.domain.GameBoard
 import com.mohitsatr.domain.GameBoard.Companion.parseToGameBoard
 import com.mohitsatr.domain.repository.SavedGameModel
-import com.mohitsatr.domain.repository.SudokuBoardModel
 import com.mohitsatr.domain.repository.ThemeManager
 import com.mohitsatr.domain.usecase.GetBoardModelUseCase
 import com.mohitsatr.domain.usecase.GetSavedGameUseCase
@@ -52,36 +51,38 @@ class GameViewModel @Inject constructor(
 
     fun loadGame(gameUid: Long, playedBefore: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            sudokuBoardModel = getBoardModelUseCase(gameUid)
-            val savedGame = getSavedGameUseCase(sudokuBoardModel.uid)
-            Log.d("GameViewMode", "$savedGame.uid $gameUid")
-            withContext(Dispatchers.Default) {
-                initialBoard = parseToGameBoard(sudokuBoardModel.initialBoard)
-                gameDifficulty = sudokuBoardModel.difficulty
+            val savedGame = getSavedGameUseCase(gameUid)
+            if (savedGame != null) {
+                savedGameModel = savedGame
+                initialBoard = parseToGameBoard(savedGame.initialBoard)
+                gameDifficulty = savedGame.difficulty
             }
 
             withContext(Dispatchers.Main) {
                 if (savedGame != null && playedBefore) {
+                    Log.d("GameViewMode", "Restoring Game -> $savedGameModel")
                      restoreSavedGame(savedGame)
                 }
                 else {
-                    gameBoard = initialBoard
+                    inGameBoard = initialBoard
                 }
-                size = gameBoard.size
-                remainingUsesList = countRemainingUses(gameBoard)
+                size = inGameBoard.size
+                remainingUsesList = countRemainingUses(inGameBoard)
             }
-            saveGame()
+            saveGame(gameUid)
         }
     }
 
-    private lateinit var sudokuBoardModel: SudokuBoardModel
+    private lateinit var savedGameModel: SavedGameModel
     private lateinit var initialBoard: GameBoard
+
+    // board to be used in-game
+    var inGameBoard by mutableStateOf(GameBoard())
 
     var solvedBoard = GameBoard()
 
     var notesToggled by mutableStateOf(false)
-    var gameBoard by mutableStateOf(GameBoard())
-    var size by mutableIntStateOf(gameBoard.size)
+    var size by mutableIntStateOf(inGameBoard.size)
 
     var gameDifficulty by mutableStateOf(Difficulty.EASY)
 
@@ -119,7 +120,7 @@ class GameViewModel @Inject constructor(
     var gamePlaying by mutableStateOf(false)
     var endGame by mutableStateOf(false)
     private lateinit var timer: Timer
-    private var duration = Duration.ZERO
+    private var duration: Duration = Duration.ZERO
     var timeText by mutableStateOf("00:00")
 
     fun startTimer() {
@@ -154,19 +155,26 @@ class GameViewModel @Inject constructor(
     private fun restoreSavedGame(savedGameModel: SavedGameModel) {
         duration = savedGameModel.timer.toKotlinDuration()
         timeText = duration.toFormattedString()
+        inGameBoard = parseToGameBoard(savedGameModel.initialBoard)
 
-        Log.d("GameViewModel", "Restoring: ${savedGameModel.savedBoard}")
-        gameBoard = parseToGameBoard(savedGameModel.savedBoard)
-
+        Log.d("GameViewModel", "(Restoring) inGameBoard has been updated -> $inGameBoard")
 //        for (i in gameBoard.indices) {
 //            for (j in gameBoard[0].indices) {
 //                gameBoard[i][j].locked = initialBoard[i][j].locked
 //            }
     }
 
-    private fun saveGame() {
-        val savedGame = getSavedGameUseCase(sudokuBoardModel.uid)
-        saveGameUseCase(savedGame, gameBoard, duration, sudokuBoardModel)
+    suspend fun saveGame(uid: Long) {
+        val savedGame = getSavedGameUseCase(uid)
+        Log.d("GameViewModel", "saveGame(uid) $savedGame")
+        saveGameUseCase(
+            uid = uid,
+            inGameBoard = inGameBoard,
+            gameDifficulty = gameDifficulty,
+            savedGameModel = savedGame,
+            solvedBoard = solvedBoard,
+            duration = duration,
+        )
     }
 
     fun processInput(cell: Cell, remainingUse: Boolean, longTap: Boolean = false): Boolean {
@@ -179,7 +187,7 @@ class GameViewModel @Inject constructor(
             }
 
 
-            if (currentCell.row > -1 && currentCell.column > -1 && !gameBoard.isLocked(currentCell)) {
+            if (currentCell.row > -1 && currentCell.column > -1 && !inGameBoard.isLocked(currentCell)) {
 
 //                if (inputMethod.value == 1 && digitFirstNumber > 0) {
 //                    if (!longTap) {
@@ -196,7 +204,7 @@ class GameViewModel @Inject constructor(
 //                        gameBoard.setValue(currentCell.row, currentCell.column, 0)
 //                    }
 //                }
-                remainingUsesList = countRemainingUses(gameBoard)
+                remainingUsesList = countRemainingUses(inGameBoard)
                 return true
             }
             else {
@@ -256,8 +264,8 @@ class GameViewModel @Inject constructor(
 
     private fun processNumberInput(number: Int) {
         if (currentCell.row > -1 && currentCell.column > -1 && gamePlaying && !currentCell.locked) {
-            gameBoard.setValue(currentCell.row, currentCell.column, number)
-            remainingUsesList = countRemainingUses(gameBoard)
+            inGameBoard.setValue(currentCell.row, currentCell.column, number)
+            remainingUsesList = countRemainingUses(inGameBoard)
         }
     }
 }

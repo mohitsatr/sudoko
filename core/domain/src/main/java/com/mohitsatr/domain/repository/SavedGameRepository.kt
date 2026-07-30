@@ -4,11 +4,11 @@ import kotlinx.coroutines.flow.Flow
 
 interface SavedGameRepository {
 
-    fun get(boardUid: Long): SavedGameModel?
+    suspend fun get(boardUid: Long): SavedGameModel?
 
-    fun insert(savedGameModel: SavedGameModel)
+    suspend fun insert(savedGameModel: SavedGameModel): Long
 
-    fun update(savedGameModel: SavedGameModel)
+    suspend fun update(savedGameModel: SavedGameModel)
 
-    fun getLast(last: Int): Flow<Map<SavedGameModel, SudokuBoardModel>>
+    fun getLast(limit: Int): Flow<List<SavedGameModel>>
 }

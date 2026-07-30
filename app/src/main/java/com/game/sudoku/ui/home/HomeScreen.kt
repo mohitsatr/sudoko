@@ -35,7 +35,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,10 +54,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.game.sudoku.R
 import com.mohitsatr.domain.repository.SavedGameModel
-import com.mohitsatr.domain.repository.SudokuBoardModel
 import com.mohitsatr.ui.SudokuBoardColors.LocalBoardColors
 import com.mohitsatr.ui.theme.SudokuTheme
-import kotlin.collections.emptyMap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnrememberedMutableState")
@@ -71,7 +68,7 @@ fun HomeScreen(
     Log.d("rop", viewModel.readyToPlay.toString())
 
     var continueLastGame by remember { mutableStateOf(false) }
-    val savedGames = viewModel.lastGames.collectAsStateWithLifecycle(emptyMap())
+    val savedGames = viewModel.lastXSavedGames.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel.readyToPlay) {
         if (viewModel.readyToPlay && viewModel.insertedBoardUid != -1L) {
@@ -91,7 +88,7 @@ fun HomeScreen(
         isContinueLastGame = continueLastGame,
         isGenerating = viewModel.isGenerating,
         isSolving = viewModel.isSolving,
-        savedGames = savedGames,
+        savedGames = savedGames.value,
         onThemeIconClick = { viewModel.toggleTheme() }
     )
 }
@@ -108,7 +105,7 @@ fun HomeScreenContent(
     isSolving: Boolean,
     onContinueLastDialogDismissed: () -> Unit,
     resumeGame: (Long) -> Unit,
-    savedGames: State<Map<SavedGameModel, SudokuBoardModel>>,
+    savedGames: List<SavedGameModel>,
 ) {
     val localColors = LocalBoardColors.current
     val newGameButtonInteractionSource = remember { MutableInteractionSource() }
@@ -157,19 +154,17 @@ fun HomeScreenContent(
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(items = savedGames.value.toList(), key = { it.first.uid }) { item ->
-                            val gameInfo = item.first
-                            val boardInfo = item.second
+                        items(items = savedGames, key = { it.uid }) { item ->
                             LastGameCard(
-                                lastPlayed = gameInfo.lastPlayed.toString(),
-                                duration = gameInfo.timer.toString(),
+                                lastPlayed = item.lastPlayed.toString(),
+                                duration = item.timer.toString(),
                                 savedBoard = ""
                             ) {
-                                resumeGame(gameInfo.uid)
+                                resumeGame(item.uid)
                             }
                             Log.d(
                                 "getting last games ",
-                                "${gameInfo.lastPlayed} on for #${gameInfo.timer.toString()}"
+                                "${item.lastPlayed} on for #${item.timer}"
                             )
                         }
                     }
@@ -320,7 +315,7 @@ fun MainMenuPreview() {
             isSolving = false,
             onContinueLastDialogDismissed = {},
             resumeGame = {},
-            savedGames = mutableStateOf(emptyMap())
+            savedGames = emptyList()
         )
     }
 }

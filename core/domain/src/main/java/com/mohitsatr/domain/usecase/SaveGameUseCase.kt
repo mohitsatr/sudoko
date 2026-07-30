@@ -6,7 +6,7 @@ import androidx.annotation.RequiresApi
 import com.mohitsatr.domain.GameBoard
 import com.mohitsatr.domain.repository.SavedGameModel
 import com.mohitsatr.domain.repository.SavedGameRepository
-import com.mohitsatr.domain.repository.SudokuBoardModel
+import io.github.ilikeyourhat.kudoku.rating.Difficulty
 import java.time.ZonedDateTime
 import javax.inject.Inject
 import kotlin.time.Duration
@@ -17,31 +17,35 @@ class SaveGameUseCase @Inject constructor(
     val savedGameRepository: SavedGameRepository
 ) {
     @RequiresApi(Build.VERSION_CODES.O)
-    operator fun invoke(
-        savedGameModel: SavedGameModel?,
-        gameBoard: GameBoard,
+    suspend operator fun invoke(
+        savedGameModel: SavedGameModel? = null,
+        uid: Long,
+        inGameBoard: GameBoard,
+        solvedBoard: GameBoard,
         duration: Duration,
-        sudokuBoardModel: SudokuBoardModel
+        gameDifficulty: Difficulty
     ) {
         if (savedGameModel != null) {
             savedGameRepository.update(
                 savedGameModel.copy(
+                    initialBoard = inGameBoard.asString(),
                     timer = java.time.Duration.ofSeconds(duration.inWholeSeconds),
-                    savedBoard = gameBoard.asString(),
                     lastPlayed = ZonedDateTime.now()
                 )
             )
-            Log.d(TAG, "Game updated: Game:${savedGameModel.uid} Board ${sudokuBoardModel.uid}")
+            Log.d(TAG, "Game with ID: $uid Updated")
         }
         else {
-            val game = SavedGameModel(
-                uid = sudokuBoardModel.uid,
-                savedBoard = gameBoard.asString(),
+            val curGame = SavedGameModel(
+                uid = uid,
                 timer = java.time.Duration.ofSeconds(duration.inWholeSeconds),
                 lastPlayed = ZonedDateTime.now(),
+                initialBoard = inGameBoard.asString(),
+                solvedBoard = solvedBoard.asString(),
+                difficulty = gameDifficulty,
             )
-            savedGameRepository.insert(game)
-            Log.d(TAG, "Game inserted: Game:${game.uid} Board ${sudokuBoardModel.uid}")
+            savedGameRepository.insert(curGame)
+            Log.d(TAG, "New Game with $uid Saved")
         }
     }
 }

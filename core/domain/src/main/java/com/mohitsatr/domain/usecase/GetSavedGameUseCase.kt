@@ -7,5 +7,5 @@ import javax.inject.Inject
 class GetSavedGameUseCase @Inject constructor(
     val savedGameRepository: SavedGameRepository
 ) {
-    operator fun invoke(boardUid: Long): SavedGameModel? = savedGameRepository.get(boardUid)
+    suspend operator fun invoke(boardUid: Long): SavedGameModel? = savedGameRepository.get(boardUid)
 }
