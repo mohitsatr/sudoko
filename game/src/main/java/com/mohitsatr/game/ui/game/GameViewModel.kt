@@ -59,22 +59,22 @@ class GameViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val savedGame = getSavedGameUseCase(gameUid)
             if (savedGame != null) {
-                savedGameModel = savedGame
-                initialBoard = parseToGameBoard(savedGame.initialBoard)
+                val board = parseToGameBoard(savedGame.initialBoard)
                 gameDifficulty = savedGame.difficulty
                 solvedBoard = parseToGameBoard(savedGame.solvedBoard)
-            }
+                savedGameModel = savedGame
 
-            withContext(Dispatchers.Main) {
-                if (savedGame != null && !newGame) {
-                    Log.d(TAG, "Restoring Game -> $savedGameModel")
-                    restoreSavedGame(savedGame)
-                } else {
-                    _gameBoardUiState.update {
-                        it.copy(
-                            inGameBoard = initialBoard,
-                            remainingKeyUse = countRemainingUses(it.inGameBoard)
-                        )
+                withContext(Dispatchers.Main) {
+                    if (!newGame) {
+                        restoreSavedGame(savedGame)
+                        Log.d(TAG, "Restoring Game -> $savedGameModel")
+                    } else {
+                        _gameBoardUiState.update {
+                            it.copy(
+                                inGameBoard = board,
+                                duration = savedGameModel.timer.toKotlinDuration(),
+                            )
+                        }
                     }
                 }
             }
@@ -82,12 +82,7 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    fun countRemainingUses(board: GameBoard): List<Int> {
-        return (1..9).map { x -> size - board.countNumber(x + 1) }
-    }
-
     private lateinit var savedGameModel: SavedGameModel
-    private lateinit var initialBoard: GameBoard
     private lateinit var timer: Timer
     private lateinit var solvedBoard: GameBoard
 
@@ -156,42 +151,32 @@ class GameViewModel @Inject constructor(
     }
 
     fun processInput(cell: Cell, remainingUse: Boolean, longTap: Boolean = false): Boolean {
-        if (_gamePlayUiState.value is GamePlayUiState.Running) {
-
+        if (cell.isEmpty()) {
+            cell.set(_gameBoardUiState.value.selectedKey)
             _gameBoardUiState.update {
-                val updatedCell =
-                    if (it.selectedCell.x == cell.x && it.selectedCell.y == cell.y) {
-                        GameBoard.nullCell
-                    } else {
-                        cell
-                    }
-                it.copy(selectedCell = updatedCell)
+                it.copy(selectedCell = cell)
             }
-
-            _gameBoardUiState.update {
-                it.copy(remainingKeyUse = countRemainingUses(it.inGameBoard))
-            }
-            return true
-        } else {
-            return false
         }
+        return true
     }
 
     fun processKeyboardInput(number: Int) {
-        if (_gamePlayUiState.value is GamePlayUiState.Running) {
-//            _gameBoardUiState.update {
-//                it.updateCell(number)
-//                it.copy(remainingKeyUse = countRemainingUses(it.inGameBoard))
-//            }
+        _gameBoardUiState.update {
+            it.copy(selectedKey = number)
         }
     }
 
     fun restartGame() {
-
+//        _gameBoardUiState.update {
+//            it.copy(inGameBoard = initialBoard)
+//        }
     }
 
     fun finishGame() {
 //        giveUpDialog = true
+        _gameBoardUiState.update {
+            it.copy(inGameBoard = solvedBoard)
+        }
         _gamePlayUiState.value = GamePlayUiState.GiveUp
     }
 
@@ -212,14 +197,14 @@ data class GameBoardState(
     val gameSize: Int = 9,
     val selectedCell: Cell = GameBoard.nullCell,
     val selectedKey: Int = -1,
-    val inGameBoard: GameBoard = GameBoard(9, 9, List(gameSize * gameSize) { - 1}),
-    val remainingKeyUse: List<Int> = emptyList(),
+    val keyboardKeys: List<Int> = (1..gameSize).toList(),
+    val inGameBoard: GameBoard = GameBoard(9, 9, List(gameSize * gameSize) { -1 }),
     val duration: Duration = Duration.ZERO,
-    val timeText: String = duration.toFormattedString(),
 ) {
-    fun updateCell(value: Int) {
-        inGameBoard.updateValue(selectedCell.x, selectedCell.y, value)
-    }
+    val timeText: String get() = duration.toFormattedString()
+
+    val remainingKeyUse: List<Int>
+        get() = (1..gameSize).map { gameSize - inGameBoard.countNumber(it) }
 }
 
 sealed interface GamePlayUiState {

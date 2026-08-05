@@ -35,7 +35,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -109,7 +108,6 @@ fun GameScreen(
         }
     }
 
-
     GameScreenContent(
         boardUi = boardUi,
         isGameRunning = gamePlayUiState is GamePlayUiState.Running,
@@ -126,7 +124,7 @@ fun GameScreen(
         onKeyboardClick = { number ->
             viewModel.processKeyboardInput(number)
         },
-        onCellClick = { cell ->
+        onBoardCellClick = { cell ->
             viewModel.processInput(
                 cell = cell,
                 remainingUse = remainingUse,
@@ -151,14 +149,13 @@ fun GameScreenContent(
     onPauseButtonClick: () -> Unit,
     onGiveUp: () -> Unit,
     onKeyboardClick: (Int) -> Unit,
-    onCellClick: (Cell) -> Unit,
+    onBoardCellClick: (Cell) -> Unit,
 ) {
     val boardScale by animateFloatAsState(
         targetValue = if (isGameRunning || hasGameEnded) 1f else 0.90f,
         label = "Game board scale"
     )
 
-    var selectedKeyboardKey by remember { mutableIntStateOf(-1) }
     var cellSize by remember(boardSize) { mutableFloatStateOf(-1f) }
 
     Scaffold(
@@ -213,7 +210,7 @@ fun GameScreenContent(
                         board = boardUi.inGameBoard,
                         maxWidth = maxWidth,
                         selectedCell = boardUi.selectedCell,
-                        onClick = onCellClick,
+                        onClick = onBoardCellClick,
                         enabled = true,
                     )
                 }
@@ -222,11 +219,8 @@ fun GameScreenContent(
                 GameKeyboard(
                     size = boardSize,
                     remainingUse = boardUi.remainingKeyUse,
-                    onClick = {
-                        selectedKeyboardKey = it
-                        onKeyboardClick(it)
-                    },
-                    selected = selectedKeyboardKey,
+                    onClick = onKeyboardClick,
+                    selectedKey = boardUi.selectedKey,
                     keySize = cellSize * 0.5f
                 )
             }
@@ -360,7 +354,7 @@ fun GameScreenPreview() {
             onPauseButtonClick = {},
             onGiveUp = {},
             onKeyboardClick = {},
-            onCellClick = {},
+            onBoardCellClick = {},
         )
     }
 }

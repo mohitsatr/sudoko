@@ -30,61 +30,34 @@ import com.mohitsatr.ui.theme.SudokuTheme
 
 @Composable
 fun GameKeyboard(
-    remainingUse: List<Int>? = null,
+    remainingUse: List<Int>,
     onClick: (Int) -> Unit,
     size: Int = 9,
-    selected: Int = -1,
+    selectedKey: Int = -1,
     keySize: Float,
 ) {
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        maxItemsInEachRow = 5
-    ) {
-        (1..size + 1).forEach { number ->
-            val usesLeft = remainingUse?.getOrNull(number) ?: 0
-            val isVisible = usesLeft > 0
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            maxItemsInEachRow = 5
+        ) {
+            (1..size + 1).forEach { number ->
+                val usesLeft = remainingUse.getOrNull(number) ?: 0
+                val isVisible = usesLeft > 0
 
-            KeyboardButton(
-                number = if (number <= size) number.toString() else "X",
-                onClick = { onClick(number) },
-                remainingUses = usesLeft,
-                isKeyPressed = selected == number,
-                keySize = keySize
-            )
-//            }
+                KeyboardButton(
+                    number = if (number <= size) number.toString() else "X",
+                    onClick = { onClick(number) },
+                    remainingUses = usesLeft,
+                    isKeyPressed = selectedKey == number,
+                    keySize = keySize
+                )
+            }
         }
-    }
-//        Row(
-//            horizontalArrangement = Arrangement.spacedBy(4.dp)
-//        ) {
-//            (6..9).forEach { number ->
-//                val usesLeft = remainingUse?.getOrNull(number) ?: 0
-//                val isVisible = usesLeft > 0
-//                Box(
-//                    modifier = Modifier) {
-//                    KeyboardButton(
-//                        number = number.toString(),
-//                        onClick = { onClick(number) },
-//                        remainingUses = usesLeft.toString(),
-//                        isKeyPressed = selected == number,
-//                        keySize = keySize
-//                    )
-//                }
-//            }
-//
-//            KeyboardButton(
-//                number = "X",
-//                onClick = {},
-//                remainingUses = "",
-//                isKeyPressed = selected == 0,
-//                keySize = keySize
-//            )
-//        }
     }
 }
 
