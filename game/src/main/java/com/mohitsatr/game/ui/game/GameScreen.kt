@@ -51,8 +51,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.mohitsatr.domain.Cell
-import com.mohitsatr.domain.GameBoard
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mohitsatr.domain.GameBoard.Companion.parseToGameBoard
 import com.mohitsatr.game.R
 import com.mohitsatr.game.ui.game.components.GameKeyboard
@@ -60,6 +59,7 @@ import com.mohitsatr.game.ui.game.components.GameMenu
 import com.mohitsatr.game.ui.game.components.board.DrawGameBoard
 import com.mohitsatr.ui.SudokuBoardColors.LocalBoardColors
 import com.mohitsatr.ui.theme.SudokuTheme
+import io.github.ilikeyourhat.kudoku.model.Cell
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,6 +71,9 @@ fun GameScreen(
     viewModel: GameViewModel = hiltViewModel(),
 ) {
     val localView = LocalView.current // for vibration
+
+    val gamePlayUiState by viewModel.gamePlayState.collectAsStateWithLifecycle()
+    val boardUi by viewModel.boardState.collectAsStateWithLifecycle()
 
     LaunchedEffect(gameUid, playedBefore) {
         viewModel.loadGame(gameUid, playedBefore)
@@ -88,15 +91,16 @@ fun GameScreen(
     // without this, timer won't start when board is loaded
     LaunchedEffect(Unit) {
         if (!viewModel.endGame) {
-            viewModel.startTimer()
+            viewModel.startGame()
         }
     }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
+
             if (event == Lifecycle.Event.ON_PAUSE) {
-                viewModel.pauseTimer()
-                viewModel.currentCell = Cell(-1, -1, 0)
+                viewModel.pauseGame()
+
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -107,28 +111,17 @@ fun GameScreen(
 
 
     GameScreenContent(
-        isGameRunning = viewModel.gamePlaying,
+        boardUi = boardUi,
+        isGameRunning = gamePlayUiState is GamePlayUiState.Running,
         hasGameEnded = viewModel.endGame,
         boardSize = viewModel.size,
-        difficultyLevel = viewModel.gameDifficulty.name,
-        mistakeLimit = false,
-        errorHighlight = 10,
-        remainingUsesList = viewModel.remainingUsesList,
-        remainingUse = remainingUse,
-        showSolution = viewModel.showSolution,
-        unSolvedBoard = viewModel.inGameBoard,
-        solvedBoard = viewModel.solvedBoard,
-        curCell = viewModel.currentCell,
-        timeText = viewModel.timeText,
-        onBackClick = onBack(),
+        onBackClick = onBack,
         onPauseButtonClick = {
-            if (!viewModel.gamePlaying) viewModel.startTimer() else viewModel.pauseTimer()
-            viewModel.currentCell = Cell(-1, -1, 0)
+            if (gamePlayUiState is GamePlayUiState.Running) viewModel.pauseGame()
+            else viewModel.startGame()
         },
-        onRestartButtonClick = {},
         onGiveUp = {
-            viewModel.pauseTimer()
-            viewModel.giveUpDialog = true
+            viewModel.finishGame()
         },
         onKeyboardClick = { number ->
             viewModel.processKeyboardInput(number)
@@ -138,36 +131,27 @@ fun GameScreen(
                 cell = cell,
                 remainingUse = remainingUse,
             )
-            if (viewModel.gamePlaying) {
+            if (gamePlayUiState is GamePlayUiState.Running) {
                 localView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                viewModel.startTimer()
+                viewModel.startGame()
             }
         },
     )
 }
 
+@Suppress("ParamsComparedByRef")
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun GameScreenContent(
+    boardUi: GameBoardState,
     isGameRunning: Boolean,
     hasGameEnded: Boolean,
     boardSize: Int,
     onBackClick: () -> Unit,
     onPauseButtonClick: () -> Unit,
-    onRestartButtonClick: () -> Unit,
     onGiveUp: () -> Unit,
     onKeyboardClick: (Int) -> Unit,
     onCellClick: (Cell) -> Unit,
-    difficultyLevel: String,
-    mistakeLimit: Boolean,
-    errorHighlight: Int,
-    remainingUsesList: List<Int>,
-    remainingUse: Boolean,
-    showSolution: Boolean,
-    unSolvedBoard: GameBoard,
-    solvedBoard: GameBoard,
-    curCell: Cell,
-    timeText: String,
 ) {
     val boardScale by animateFloatAsState(
         targetValue = if (isGameRunning || hasGameEnded) 1f else 0.90f,
@@ -183,7 +167,7 @@ fun GameScreenContent(
                 isGameRunning = isGameRunning,
                 hasGameEnded = hasGameEnded,
                 onBackClick = onBackClick,
-                timerText = timeText,
+                timerText = boardUi.timeText,
                 onPauseButtonClick = onPauseButtonClick,
                 onRestartButtonClick = {},
                 onGiveUp = onGiveUp,
@@ -226,19 +210,18 @@ fun GameScreenContent(
                     cellSize = maxWidth / boardSize.toFloat()
 
                     DrawGameBoard(
-                        board = unSolvedBoard,
+                        board = boardUi.inGameBoard,
                         maxWidth = maxWidth,
-                        selectedCell = curCell,
+                        selectedCell = boardUi.selectedCell,
                         onClick = onCellClick,
                         enabled = true,
-                        cellSize = cellSize,
                     )
                 }
             }
             Box(modifier = Modifier.weight(0.3f)) {
                 GameKeyboard(
                     size = boardSize,
-                    remainingUse = if (remainingUse) remainingUsesList else null,
+                    remainingUse = boardUi.remainingKeyUse,
                     onClick = {
                         selectedKeyboardKey = it
                         onKeyboardClick(it)
@@ -366,27 +349,18 @@ fun GameScreenPreview() {
     val fakeGameString =
         "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
     val fakeGameBoard = parseToGameBoard(fakeGameString)
+    val fakeBoardState = GameBoardState()
     SudokuTheme {
         GameScreenContent(
+            boardUi = fakeBoardState,
             isGameRunning = true,
             hasGameEnded = true,
             boardSize = 9,
             onBackClick = {},
             onPauseButtonClick = {},
-            onRestartButtonClick = {},
             onGiveUp = {},
             onKeyboardClick = {},
             onCellClick = {},
-            difficultyLevel = "Easy",
-            mistakeLimit = true,
-            errorHighlight = 1,
-            remainingUsesList = emptyList(),
-            remainingUse = true,
-            showSolution = false,
-            unSolvedBoard = fakeGameBoard,
-            solvedBoard = fakeGameBoard,
-            curCell = Cell(0, 0, 0),
-            timeText = "0:0",
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.mohitsatr.game.ui.game
 
+//import com.mohitsatr.data.datastore.AppSettingsManager
 import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
@@ -11,19 +12,20 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-//import com.mohitsatr.data.datastore.AppSettingsManager
-import com.mohitsatr.domain.Cell
 import com.mohitsatr.domain.GameBoard
 import com.mohitsatr.domain.GameBoard.Companion.parseToGameBoard
 import com.mohitsatr.domain.repository.SavedGameModel
-import com.mohitsatr.domain.repository.ThemeManager
-import com.mohitsatr.domain.usecase.GetBoardModelUseCase
 import com.mohitsatr.domain.usecase.GetSavedGameUseCase
 import com.mohitsatr.domain.usecase.SaveGameUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.ilikeyourhat.kudoku.model.Cell
 import io.github.ilikeyourhat.kudoku.rating.Difficulty
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Timer
@@ -36,105 +38,79 @@ import kotlin.time.toKotlinDuration
 @RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class GameViewModel @Inject constructor(
-    themeManager: ThemeManager,
     savedStateHandle: SavedStateHandle,
-    private val getBoardModelUseCase: GetBoardModelUseCase,
     private val saveGameUseCase: SaveGameUseCase,
     private val getSavedGameUseCase: GetSavedGameUseCase,
 ) : ViewModel() {
     init {
         val navArgs: GameScreenNavArgs? = savedStateHandle.get<GameScreenNavArgs>("args")
         if (navArgs != null) {
-            loadGame(navArgs.gameUid, navArgs.playedBefore)
+            loadGame(navArgs.gameUid, navArgs.newGame)
         }
     }
 
-    fun loadGame(gameUid: Long, playedBefore: Boolean) {
+    private val _gameBoardUiState = MutableStateFlow(GameBoardState())
+    val boardState: StateFlow<GameBoardState> = _gameBoardUiState.asStateFlow()
+
+    private val _gamePlayUiState = MutableStateFlow<GamePlayUiState>(GamePlayUiState.Paused)
+    val gamePlayState: StateFlow<GamePlayUiState> = _gamePlayUiState.asStateFlow()
+
+    fun loadGame(gameUid: Long, newGame: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val savedGame = getSavedGameUseCase(gameUid)
             if (savedGame != null) {
                 savedGameModel = savedGame
                 initialBoard = parseToGameBoard(savedGame.initialBoard)
                 gameDifficulty = savedGame.difficulty
+                solvedBoard = parseToGameBoard(savedGame.solvedBoard)
             }
 
             withContext(Dispatchers.Main) {
-                if (savedGame != null && playedBefore) {
-                    Log.d("GameViewMode", "Restoring Game -> $savedGameModel")
-                     restoreSavedGame(savedGame)
+                if (savedGame != null && !newGame) {
+                    Log.d(TAG, "Restoring Game -> $savedGameModel")
+                    restoreSavedGame(savedGame)
+                } else {
+                    _gameBoardUiState.update {
+                        it.copy(
+                            inGameBoard = initialBoard,
+                            remainingKeyUse = countRemainingUses(it.inGameBoard)
+                        )
+                    }
                 }
-                else {
-                    inGameBoard = initialBoard
-                }
-                size = inGameBoard.size
-                remainingUsesList = countRemainingUses(inGameBoard)
             }
             saveGame(gameUid)
         }
     }
 
+    fun countRemainingUses(board: GameBoard): List<Int> {
+        return (1..9).map { x -> size - board.countNumber(x + 1) }
+    }
+
     private lateinit var savedGameModel: SavedGameModel
     private lateinit var initialBoard: GameBoard
-
-    // board to be used in-game
-    var inGameBoard by mutableStateOf(GameBoard())
-
-    var solvedBoard = GameBoard()
-
-    var notesToggled by mutableStateOf(false)
-    var size by mutableIntStateOf(inGameBoard.size)
-
-    var gameDifficulty by mutableStateOf(Difficulty.EASY)
-
-//    val mistakeLimit = appSettingsManager.mistakesLimit.stateIn(
-//        viewModelScope,
-//        SharingStarted.Eagerly,
-//        PreferencesConstants.DEFAULT_MISTAKES_LIMIT
-//    )
-
-    // mistake checking method
-//    val mistakesMethod = appSettingsManager.highlightMistakes.stateIn(
-//        viewModelScope,
-//        SharingStarted.Eagerly,
-//        PreferencesConstants.DEFAULT_HIGHLIGHT_MISTAKES
-//    )
-
-    var giveUpDialog by mutableStateOf(false)
-
-    var showSolution by mutableStateOf(false)
-
-//    var remainingUse = appSettingsManager.remainingUse
-    var remainingUsesList = emptyList<Int>()
-
-    var digitFirstNumber by mutableIntStateOf(0)
-    private val inputMethod = 1 // appSettingsManager.inputMethod
-//        .stateIn(
-//            scope = viewModelScope,
-//            started = SharingStarted.Eagerly,
-//            initialValue = 1
-//        )
-
-    var currentCell by mutableStateOf(Cell(-1, -1, 0))
-
-    var restartDialog by mutableStateOf(false)
-    var gamePlaying by mutableStateOf(false)
-    var endGame by mutableStateOf(false)
     private lateinit var timer: Timer
-    private var duration: Duration = Duration.ZERO
-    var timeText by mutableStateOf("00:00")
+    private lateinit var solvedBoard: GameBoard
 
-    fun startTimer() {
-        if (!gamePlaying) {
-            gamePlaying = true
+    var size by mutableIntStateOf(9)
+    var gameDifficulty by mutableStateOf(Difficulty.EASY)
+    var showSolution by mutableStateOf(false)
+    var endGame by mutableStateOf(false)
+
+    fun startGame() {
+        if (_gamePlayUiState.value !is GamePlayUiState.Running) {
+            _gameBoardUiState.update { it.copy(selectedCell = GameBoard.nullCell) }
+            _gamePlayUiState.value = GamePlayUiState.Running
             val updateRate = 50L
-
             timer = fixedRateTimer(initialDelay = updateRate, period = updateRate) {
-                val prevTime = duration
-
-                duration = duration.plus((updateRate * 1e6).toDuration(DurationUnit.NANOSECONDS))
-                if (prevTime.toInt(DurationUnit.SECONDS)
-                    != duration.toInt(DurationUnit.SECONDS)) {
-                    timeText = duration.toFormattedString()
+                val curDuration = _gameBoardUiState.value.duration
+                _gameBoardUiState.update {
+                    it.copy(
+                        duration = curDuration.plus((updateRate * 1e6).toDuration(DurationUnit.NANOSECONDS))
+                    )
+                }
+//                if (prevTime.toInt(DurationUnit.SECONDS) != _gameBoardUiState.value.duration.toInt(DurationUnit.SECONDS)) {
+//
+//                    timeText = _gameBoardUiState.value.duration.toFormattedString()
 
 //                    if (gameBoard.any { it.any { cell -> cell.value != 0}}) {
 //                        viewModelScope.launch(Dispatchers.IO) {
@@ -142,26 +118,28 @@ class GameViewModel @Inject constructor(
 //                            Log.d("StartTimer", "savedGame()")
 //                        }
 //                    }
-                }
             }
         }
     }
 
-    fun pauseTimer() {
-        gamePlaying = false
+    fun pauseGame() {
+        _gamePlayUiState.value = GamePlayUiState.Paused
+
+        _gameBoardUiState.update {
+            it.copy(selectedCell = GameBoard.nullCell)
+        }
         timer.cancel()
     }
 
     private fun restoreSavedGame(savedGameModel: SavedGameModel) {
-        duration = savedGameModel.timer.toKotlinDuration()
-        timeText = duration.toFormattedString()
-        inGameBoard = parseToGameBoard(savedGameModel.initialBoard)
+        _gameBoardUiState.update {
+            it.copy(
+                duration = savedGameModel.timer.toKotlinDuration(),
+                inGameBoard = parseToGameBoard(savedGameModel.initialBoard)
+            )
+        }
 
-        Log.d("GameViewModel", "(Restoring) inGameBoard has been updated -> $inGameBoard")
-//        for (i in gameBoard.indices) {
-//            for (j in gameBoard[0].indices) {
-//                gameBoard[i][j].locked = initialBoard[i][j].locked
-//            }
+        Log.d(TAG, "restoreSavedGame(SavedGameModel) inGameBoard has been updated")
     }
 
     suspend fun saveGame(uid: Long) {
@@ -169,104 +147,56 @@ class GameViewModel @Inject constructor(
         Log.d("GameViewModel", "saveGame(uid) $savedGame")
         saveGameUseCase(
             uid = uid,
-            inGameBoard = inGameBoard,
+            inGameBoard = _gameBoardUiState.value.inGameBoard,
             gameDifficulty = gameDifficulty,
             savedGameModel = savedGame,
             solvedBoard = solvedBoard,
-            duration = duration,
+            duration = _gameBoardUiState.value.duration,
         )
     }
 
     fun processInput(cell: Cell, remainingUse: Boolean, longTap: Boolean = false): Boolean {
-        if (gamePlaying) {
-            currentCell = if (currentCell.row == cell.row && currentCell.column == cell.column
-                && digitFirstNumber == 0) {
-                Cell(-1, -1)
-            } else {
-                cell
+        if (_gamePlayUiState.value is GamePlayUiState.Running) {
+
+            _gameBoardUiState.update {
+                val updatedCell =
+                    if (it.selectedCell.x == cell.x && it.selectedCell.y == cell.y) {
+                        GameBoard.nullCell
+                    } else {
+                        cell
+                    }
+                it.copy(selectedCell = updatedCell)
             }
 
-
-            if (currentCell.row > -1 && currentCell.column > -1 && !inGameBoard.isLocked(currentCell)) {
-
-//                if (inputMethod.value == 1 && digitFirstNumber > 0) {
-//                    if (!longTap) {
-//                        if (remainingUsesList.size >= digitFirstNumber
-//                            && remainingUsesList[digitFirstNumber - 1] > 0 || !remainingUse) {
-//                            processNumberInput(digitFirstNumber)
-//                            if (notesToggled) {
-//                                currentCell = Cell(currentCell.row, currentCell.column,
-//                                    digitFirstNumber)
-//                            }
-//                        }
-//                    }
-//                    else if (!currentCell.locked) {
-//                        gameBoard.setValue(currentCell.row, currentCell.column, 0)
-//                    }
-//                }
-                remainingUsesList = countRemainingUses(inGameBoard)
-                return true
+            _gameBoardUiState.update {
+                it.copy(remainingKeyUse = countRemainingUses(it.inGameBoard))
             }
-            else {
-                return false
-            }
+            return true
         } else {
             return false
         }
     }
 
-//    private fun getBoardNoRef(): List<List<Cell>> =
-//        gameBoard.map { items -> items.map { item -> item.copy() } }
-
-//    private fun setValueCell(
-//        value: Int,
-//        row : Int = currCell.row,
-//        col : Int = currCell.column
-//    ): List<List<Cell>> {
-//        var new = getBoardNoRef()
-//
-//        new[row][col].value = value
-//        remainingUsesList = countRemainingUses(new)
-//
-//        if (currCell.row == row && currCell.column == col) {
-//            currCell = currCell.copy(value = new[row][col].value)
-//        }
-//
-//        if (value == 0) {
-//            new[row][col].error = false
-//            currCell.error = false
-//            return new
-//        }
-//
-//        return new
-//    }
-
     fun processKeyboardInput(number: Int) {
-//        digitFirstNumber = number
-        if (gamePlaying) {
-            if (!currentCell.locked && currentCell.column >= 0
-                && currentCell.row >= 0) { // && inputMethod.value == 0) {
-//              overrideInputMethodDF = false
-                digitFirstNumber = 0
-                processNumberInput(number)
-//              undoRedoManager.addState(GameState(gameBoard, notes))
-//            } else if (inputMethod.value == 1) {
-//                digitFirstNumber = if (digitFirstNumber == number) 0 else number
-//                currentCell = Cell(-1, -1, digitFirstNumber)
-            }
+        if (_gamePlayUiState.value is GamePlayUiState.Running) {
+//            _gameBoardUiState.update {
+//                it.updateCell(number)
+//                it.copy(remainingKeyUse = countRemainingUses(it.inGameBoard))
+//            }
         }
-//            eraseButtonToggled = false
     }
 
-    private fun countRemainingUses(board: GameBoard): List<Int> {
-        return (1..9).map { x -> size - board.countNumber(x + 1) }
+    fun restartGame() {
+
     }
 
-    private fun processNumberInput(number: Int) {
-        if (currentCell.row > -1 && currentCell.column > -1 && gamePlaying && !currentCell.locked) {
-            inGameBoard.setValue(currentCell.row, currentCell.column, number)
-            remainingUsesList = countRemainingUses(inGameBoard)
-        }
+    fun finishGame() {
+//        giveUpDialog = true
+        _gamePlayUiState.value = GamePlayUiState.GiveUp
+    }
+
+    companion object {
+        private const val TAG = "GameViewModel"
     }
 }
 
@@ -276,4 +206,29 @@ fun Duration.toFormattedString(): String {
         if (hours > 0) String.format("%02d:%02d:%02d", hours, minutes, seconds)
         else String.format("%02d:%02d", minutes, seconds)
     }
+}
+
+data class GameBoardState(
+    val gameSize: Int = 9,
+    val selectedCell: Cell = GameBoard.nullCell,
+    val selectedKey: Int = -1,
+    val inGameBoard: GameBoard = GameBoard(9, 9, List(gameSize * gameSize) { - 1}),
+    val remainingKeyUse: List<Int> = emptyList(),
+    val duration: Duration = Duration.ZERO,
+    val timeText: String = duration.toFormattedString(),
+) {
+    fun updateCell(value: Int) {
+        inGameBoard.updateValue(selectedCell.x, selectedCell.y, value)
+    }
+}
+
+sealed interface GamePlayUiState {
+
+    data object Paused : GamePlayUiState
+
+    data object Running : GamePlayUiState
+
+    data object GiveUp : GamePlayUiState
+
+    data object EndGame : GamePlayUiState
 }

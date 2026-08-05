@@ -1,7 +1,9 @@
 package com.game.sudoku.ui.home
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -57,6 +59,7 @@ import com.mohitsatr.domain.repository.SavedGameModel
 import com.mohitsatr.ui.SudokuBoardColors.LocalBoardColors
 import com.mohitsatr.ui.theme.SudokuTheme
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnrememberedMutableState")
 @Composable
@@ -65,20 +68,20 @@ fun HomeScreen(
     onNavigateToGame: (Long, Boolean) -> Unit,
 ) {
 
-    Log.d("rop", viewModel.readyToPlay.toString())
+    val gameGeneratingState by viewModel.gameGeneratingState.collectAsStateWithLifecycle()
+    val savedGames by viewModel.lastXSavedGames.collectAsStateWithLifecycle()
 
     var continueLastGame by remember { mutableStateOf(false) }
-    val savedGames = viewModel.lastXSavedGames.collectAsStateWithLifecycle()
 
-    LaunchedEffect(viewModel.readyToPlay) {
-        if (viewModel.readyToPlay && viewModel.insertedBoardUid != -1L) {
-            onNavigateToGame(viewModel.insertedBoardUid, false)
-            viewModel.readyToPlay = false
+    LaunchedEffect(gameGeneratingState is SudokuGeneratingState.ReadyToPlay) {
+        val state = gameGeneratingState
+        if (state is SudokuGeneratingState.ReadyToPlay) {
+            onNavigateToGame(state.insertedBoardUid, false)
         }
     }
 
     HomeScreenContent(
-        onStartNewGameClick = { viewModel.startGame() },
+        onStartNewGameClick = { viewModel.startNewGame() },
         onContinueOldGameClick = { continueLastGame = true },
         onContinueLastDialogDismissed = { continueLastGame = false },
         resumeGame = { uid ->
@@ -88,7 +91,7 @@ fun HomeScreen(
         isContinueLastGame = continueLastGame,
         isGenerating = viewModel.isGenerating,
         isSolving = viewModel.isSolving,
-        savedGames = savedGames.value,
+        savedGames = savedGames,
         onThemeIconClick = { viewModel.toggleTheme() }
     )
 }

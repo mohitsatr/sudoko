@@ -34,13 +34,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mohitsatr.domain.Cell
 import com.mohitsatr.domain.GameBoard
 import com.mohitsatr.domain.GameBoard.Companion.parseToGameBoard
 import com.mohitsatr.ui.SudokuBoardColors.LightThemeSudokuColorsImpl
 import com.mohitsatr.ui.SudokuBoardColors.LocalBoardColors
 import com.mohitsatr.ui.SudokuBoardColors.SudokuColors
 import com.mohitsatr.ui.theme.SudokuTheme
+import io.github.ilikeyourhat.kudoku.model.Cell
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.sqrt
@@ -48,9 +48,8 @@ import kotlin.math.sqrt
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun DrawGameBoard(
-    modifier: Modifier = Modifier,
     board: GameBoard,
-    size: Int = board.size,
+    size: Int = 9,
     mainTextSize: TextUnit = when (size) {
         6 -> 32.sp
         9 -> 26.sp
@@ -61,10 +60,7 @@ fun DrawGameBoard(
     selectedCell: Cell,
     onClick: (Cell) -> Unit,
     enabled: Boolean = true,
-    questions: Boolean = false,
-    cellsToHighLight: List<Cell>? = null,
     boardColors: SudokuColors = LocalBoardColors.current,
-    cellSize: Float,
     maxWidth: Float,
 ) {
 
@@ -86,9 +82,9 @@ fun DrawGameBoard(
                 onTap = {
                     val totalOffset = it / zoom + offset
                     val row = floor((totalOffset.y) / cellSize).toInt()
-                        .coerceIn(0, board.size)
+                        .coerceIn(0, size)
                     val column = floor((totalOffset.x) / cellSize).toInt()
-                        .coerceIn(0, board.size)
+                        .coerceIn(0, size)
                     onClick(board.getCell(row, column))
                 }
             )
@@ -156,8 +152,8 @@ fun DrawGameBoard(
     Canvas(modifier = boardModifier) {
         val cornerRadius = CornerRadius(15f, 15f)
         val clickOffset = Offset(
-            x = selectedCell.column * cellSize,
-            y = selectedCell.row * cellSize
+            x = selectedCell.y * cellSize,
+            y = selectedCell.x * cellSize
         )
 
 //            cellsToHighLight?.forEach {
@@ -204,7 +200,7 @@ fun DrawGameBoard(
                 val cell = board.getCell(row, col)
                 if (cell.value != 0) {
                     val isSelected =
-                        cell.row == selectedCell.row && cell.column == selectedCell.column
+                        cell.x == selectedCell.x && cell.y == selectedCell.y
 
                     val textStyle = TextStyle(
                         color = if (isSelected) selectedCellNumberColor else nonSelectedCellNumberColor,
@@ -270,8 +266,8 @@ fun DrawScope.SingleCell(
 //            textColor.getTextBounds(textToDraw, 0, 1, textBounds)
             val textWidth = textColor.measureText(textToDraw)
 
-            val x = currentCell.column * cellSize + (cellSize - textWidth) / 2f
-            val y = currentCell.row * cellSize + (cellSize + textBounds.height()) / 2f
+            val x = currentCell.y * cellSize + (cellSize - textWidth) / 2f
+            val y = currentCell.x * cellSize + (cellSize + textBounds.height()) / 2f
 
             canvas.nativeCanvas.drawText(textToDraw, x, y, textColor)
         }
@@ -321,7 +317,6 @@ fun SingleCellPreview() {
 @Preview
 @Composable
 fun GameBoardPreview() {
-    val emptyBoard = GameBoard()
     val fakeGameString =
         "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
     val fakeGameBoard = parseToGameBoard(fakeGameString)
@@ -333,7 +328,6 @@ fun GameBoardPreview() {
             selectedCell = Cell(4, 0, 8),
             onClick = {},
             boardColors = fakeBoardColors,
-            cellSize = 110f,
             maxWidth = 200f,
         )
     }

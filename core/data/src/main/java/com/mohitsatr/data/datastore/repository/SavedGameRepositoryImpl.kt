@@ -1,5 +1,7 @@
 package com.mohitsatr.data.datastore.repository
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.mohitsatr.data.di.datastore.dao.SavedGameDao
 import com.mohitsatr.data.di.datastore.model.SavedGameEntity
 import com.mohitsatr.domain.repository.SavedGameModel
@@ -33,6 +35,7 @@ fun SavedGameModel.toEntity(): SavedGameEntity = SavedGameEntity(
     solvedBoard = solvedBoard,
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 fun SavedGameEntity.toDomain(): SavedGameModel = SavedGameModel(
     timer = timer,
     lastPlayed = lastPlayed,

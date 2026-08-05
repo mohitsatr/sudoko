@@ -8,23 +8,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mohitsatr.domain.GameBoard
 import com.mohitsatr.domain.repository.BoardRepository
 import com.mohitsatr.domain.repository.SavedGameModel
 import com.mohitsatr.domain.repository.SavedGameRepository
-import com.mohitsatr.domain.repository.SudokuBoardModel
 import com.mohitsatr.ui.theme.ToggleThemeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.ilikeyourhat.kudoku.generating.defaultGenerator
-import io.github.ilikeyourhat.kudoku.model.Sudoku
+import io.github.ilikeyourhat.kudoku.generating.SudokuGenerator
+import io.github.ilikeyourhat.kudoku.parsing.toSingleLineString
 import io.github.ilikeyourhat.kudoku.rating.Difficulty
-import io.github.ilikeyourhat.kudoku.solving.defaultSolver
+import io.github.ilikeyourhat.kudoku.solving.SudokuSolver
 import io.github.ilikeyourhat.kudoku.type.Classic9x9
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.ZonedDateTime
@@ -36,9 +37,13 @@ class HomeViewModel
     private val boardRepository: BoardRepository,
     private val savedGameRepository: SavedGameRepository,
     private val toggleThemeUseCase: ToggleThemeUseCase,
+    private val sudokuGenerator: SudokuGenerator,
+    private val sudokuSolver: SudokuSolver,
 ) : ViewModel() {
 
-    var insertedBoardUid = -1L
+    private val _gameGeneratingState =
+        MutableStateFlow<SudokuGeneratingState>(SudokuGeneratingState.Loading)
+    val gameGeneratingState = _gameGeneratingState.asStateFlow()
 
     var isGenerating by mutableStateOf(false)
     var isSolving by mutableStateOf(false)
@@ -55,44 +60,41 @@ class HomeViewModel
     fun toggleTheme() = viewModelScope.launch { toggleThemeUseCase() }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun startGame() {
-        isSolving = false
-        isGenerating = false
-
-        val initialPuzzle = GameBoard()
-        val solvedPuzzle = GameBoard()
-
+    fun startNewGame() {
         viewModelScope.launch(Dispatchers.IO) {
-            isGenerating = true
-            val generator = Sudoku.defaultGenerator()
-            val generated = generator.generate(Classic9x9, Difficulty.EASY)
-            isGenerating = false
+            val newPuzzle = sudokuGenerator.generate(Classic9x9, Difficulty.EASY)
+            val newPuzzleSolved = sudokuSolver.solve(newPuzzle)
 
-            isSolving = true
-            val solver = Sudoku.defaultSolver()
-            val solved = solver.solve(generated)
-            isSolving = false
-
-            if (solved.isSolved()) {
-                initialPuzzle.fill(generated)
-                solvedPuzzle.fill(solved)
-
-
-                withContext(Dispatchers.IO) {
-                    insertedBoardUid = savedGameRepository.insert(
-                        SavedGameModel(
-                            0,
-                            initialBoard = initialPuzzle.asString(),
-                            solvedBoard = solvedPuzzle.asString(),
-                            difficulty = Difficulty.EASY,
-                            timer = java.time.Duration.ofSeconds(Duration.ZERO.inWholeSeconds),
-                            lastPlayed = ZonedDateTime.now(),
-                        )
+            val insertedBoardUid = withContext(Dispatchers.IO) {
+                savedGameRepository.insert(
+                    SavedGameModel(
+                        0,
+                        initialBoard = newPuzzle.toSingleLineString(),
+                        solvedBoard = newPuzzleSolved.toSingleLineString(),
+                        difficulty = Difficulty.EASY,
                     )
-                    Log.d("startGame", "$insertedBoardUid got inserted")
-                }
-                readyToPlay = true
+                )
+            }
+            _gameGeneratingState.update {
+                SudokuGeneratingState.ReadyToPlay(
+                    insertedBoardUid = insertedBoardUid,
+                    generatedPuzzle = newPuzzle.toSingleLineString(),
+                    solvedPuzzle = newPuzzleSolved.toSingleLineString()
+                )
             }
         }
     }
+}
+
+sealed interface SudokuGeneratingState {
+
+    data object Loading : SudokuGeneratingState
+
+    data class ReadyToPlay(
+        val insertedBoardUid: Long = -1L,
+        val generatedPuzzle: String,
+        val solvedPuzzle: String,
+    ) : SudokuGeneratingState
+
+    data object NotReadyToPlay: SudokuGeneratingState
 }

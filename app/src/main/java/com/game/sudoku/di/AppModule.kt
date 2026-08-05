@@ -1,19 +1,35 @@
 package com.game.sudoku.di
 
+import android.content.Context
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.github.ilikeyourhat.kudoku.generating.SudokuGenerator
+import io.github.ilikeyourhat.kudoku.generating.defaultGenerator
+import io.github.ilikeyourhat.kudoku.model.Sudoku
+import io.github.ilikeyourhat.kudoku.solving.SudokuSolver
+import io.github.ilikeyourhat.kudoku.solving.defaultSolver
+import jakarta.inject.Singleton
 
-//@Module
-//@InstallIn(SingletonComponent::class)
-//class AppModule {
+@Module
+@InstallIn(SingletonComponent::class)
+class AppModule {
 
-//    @Provides
-//    @Singleton
-//    fun providesAppSettingsManager(@ApplicationContext context: Context) : AppSettingsManager {
-//        return AppSettingsManager(context)
-//    }
-//
+    @Provides
+    @Singleton
+    fun providesSudokuGenerator(): SudokuGenerator {
+        return Sudoku.defaultGenerator()
+    }
+
+    @Provides
+    @Singleton
+    fun providesSudokuSolver(): SudokuSolver {
+        return Sudoku.defaultSolver()
+    }
+}
+
 //    @Provides
 //    @Singleton
 //    fun providesThemeSettingsManager(@ApplicationContext context: Context) =

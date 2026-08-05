@@ -13,8 +13,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import com.mohitsatr.domain.Cell
 import com.mohitsatr.domain.GameBoard
+import io.github.ilikeyourhat.kudoku.model.Cell
 
 fun DrawScope.drawRoundCell(
     row: Int,
@@ -92,22 +92,23 @@ fun DrawScope.drawNumbers(
     drawIntoCanvas { canvas ->
         for (i in 0 until size) {
             for (j in 0 until size) {
-                val isSelected = board.getValue(i, j) == selectedCell.value && selectedCell.value != 0
+                val cellValue = board.getCell(i, j).value
+                val isSelected = cellValue == selectedCell.value && selectedCell.value != 0
 
-                if (board.getValue(i, j) != 0) {
+                if (board.getCell(i, j).value != 0) {
                     val paint = when {
                         isSelected -> selectedHighlightPaint
                         else -> nonSelectedHighlightPaint
                     }
                     val textToDraw =
-                        if (questions) "?" else board.getValue(i, j).toString(16).uppercase()
+                        if (questions) "?" else cellValue.toString(16).uppercase()
 
                     val textBounds = android.graphics.Rect()
                     selectedHighlightPaint.getTextBounds(textToDraw, 0, 1, textBounds)
                     val textWidth = paint.measureText(textToDraw)
 
-                    val x = board.getCell(i, j).column * cellSize + (cellSize - textWidth) / 2f
-                    val y = board.getCell(i, j).row * cellSize + (cellSize + textBounds.height()) / 2f
+                    val x = board.getCell(i, j).y * cellSize + (cellSize - textWidth) / 2f
+                    val y = board.getCell(i, j).x * cellSize + (cellSize + textBounds.height()) / 2f
 
                     Log.d("Text", "width=$textWidth, x=$x, y=$y")
                     Log.d("Attribute", "cellSize=$cellSize, textBound=$textBounds")
