@@ -84,7 +84,6 @@ fun GameScreen(
         animationSpec = tween(durationMillis = 250), label = "restartButtonAnimation"
     )
 
-    val remainingUse = false 
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // without this, timer won't start when board is loaded
@@ -127,7 +126,6 @@ fun GameScreen(
         onBoardCellClick = { cell ->
             viewModel.processInput(
                 cell = cell,
-                remainingUse = remainingUse,
             )
             if (gamePlayUiState is GamePlayUiState.Running) {
                 localView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
@@ -207,7 +205,7 @@ fun GameScreenContent(
                     cellSize = maxWidth / boardSize.toFloat()
 
                     DrawGameBoard(
-                        board = boardUi.inGameBoard,
+                        board = boardUi.displayBoard,
                         maxWidth = maxWidth,
                         selectedCell = boardUi.selectedCell,
                         onClick = onBoardCellClick,
@@ -217,11 +215,10 @@ fun GameScreenContent(
             }
             Box(modifier = Modifier.weight(0.3f)) {
                 GameKeyboard(
-                    size = boardSize,
-                    remainingUse = boardUi.remainingKeyUse,
+                    keysAndCount = boardUi.remainingKeyUseCount,
                     onClick = onKeyboardClick,
-                    selectedKey = boardUi.selectedKey,
-                    keySize = cellSize * 0.5f
+                    keySize = cellSize * 0.5f,
+                    selectedKey = boardUi.selectedKey
                 )
             }
         }

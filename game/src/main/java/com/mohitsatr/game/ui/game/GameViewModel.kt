@@ -71,7 +71,7 @@ class GameViewModel @Inject constructor(
                     } else {
                         _gameBoardUiState.update {
                             it.copy(
-                                inGameBoard = board,
+                                displayBoard = board,
                                 duration = savedGameModel.timer.toKotlinDuration(),
                             )
                         }
@@ -130,7 +130,7 @@ class GameViewModel @Inject constructor(
         _gameBoardUiState.update {
             it.copy(
                 duration = savedGameModel.timer.toKotlinDuration(),
-                inGameBoard = parseToGameBoard(savedGameModel.initialBoard)
+                displayBoard = parseToGameBoard(savedGameModel.initialBoard)
             )
         }
 
@@ -142,7 +142,7 @@ class GameViewModel @Inject constructor(
         Log.d("GameViewModel", "saveGame(uid) $savedGame")
         saveGameUseCase(
             uid = uid,
-            inGameBoard = _gameBoardUiState.value.inGameBoard,
+            inGameBoard = _gameBoardUiState.value.displayBoard,
             gameDifficulty = gameDifficulty,
             savedGameModel = savedGame,
             solvedBoard = solvedBoard,
@@ -150,8 +150,9 @@ class GameViewModel @Inject constructor(
         )
     }
 
-    fun processInput(cell: Cell, remainingUse: Boolean, longTap: Boolean = false): Boolean {
-        if (cell.isEmpty()) {
+    fun processInput(cell: Cell): Boolean {
+        val countLeft = _gameBoardUiState.value.remainingKeyUseCount[_gameBoardUiState.value.selectedKey - 1]
+        if (countLeft > 0 && cell.isEmpty()) {
             cell.set(_gameBoardUiState.value.selectedKey)
             _gameBoardUiState.update {
                 it.copy(selectedCell = cell)
@@ -160,10 +161,8 @@ class GameViewModel @Inject constructor(
         return true
     }
 
-    fun processKeyboardInput(number: Int) {
-        _gameBoardUiState.update {
-            it.copy(selectedKey = number)
-        }
+    fun processKeyboardInput(key: Int) {
+        _gameBoardUiState.update { it.copy(selectedKey = key) }
     }
 
     fun restartGame() {
@@ -175,7 +174,7 @@ class GameViewModel @Inject constructor(
     fun finishGame() {
 //        giveUpDialog = true
         _gameBoardUiState.update {
-            it.copy(inGameBoard = solvedBoard)
+            it.copy(displayBoard = solvedBoard)
         }
         _gamePlayUiState.value = GamePlayUiState.GiveUp
     }
@@ -197,14 +196,13 @@ data class GameBoardState(
     val gameSize: Int = 9,
     val selectedCell: Cell = GameBoard.nullCell,
     val selectedKey: Int = -1,
-    val keyboardKeys: List<Int> = (1..gameSize).toList(),
-    val inGameBoard: GameBoard = GameBoard(9, 9, List(gameSize * gameSize) { -1 }),
+    val displayBoard: GameBoard = GameBoard(9, 9, List(gameSize * gameSize) { -1 }),
     val duration: Duration = Duration.ZERO,
 ) {
     val timeText: String get() = duration.toFormattedString()
 
-    val remainingKeyUse: List<Int>
-        get() = (1..gameSize).map { gameSize - inGameBoard.countNumber(it) }
+    val remainingKeyUseCount: List<Int>
+        get() = (0..gameSize).map { gameSize - displayBoard.countNumber(it + 1) }
 }
 
 sealed interface GamePlayUiState {

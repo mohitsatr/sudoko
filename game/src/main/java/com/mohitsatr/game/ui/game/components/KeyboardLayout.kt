@@ -1,5 +1,6 @@
 package com.mohitsatr.game.ui.game.components
 
+import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,20 +22,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mohitsatr.ui.SudokuBoardColors.LocalBoardColors
-import com.mohitsatr.ui.theme.SudokuTheme
+import kotlinx.coroutines.selects.select
 
 @Composable
 fun GameKeyboard(
-    remainingUse: List<Int>,
+    keysAndCount: List<Int>,
     onClick: (Int) -> Unit,
-    size: Int = 9,
-    selectedKey: Int = -1,
     keySize: Float,
+    selectedKey: Int,
 ) {
+    Log.d("GameKeyboard", "$selectedKey, $keysAndCount")
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
@@ -45,15 +44,14 @@ fun GameKeyboard(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             maxItemsInEachRow = 5
         ) {
-            (1..size + 1).forEach { number ->
-                val usesLeft = remainingUse.getOrNull(number) ?: 0
-                val isVisible = usesLeft > 0
-
+            keysAndCount.forEachIndexed { index, count->
+                val key = index + 1
+                val isEraser = (keysAndCount.lastIndex == index)
                 KeyboardButton(
-                    number = if (number <= size) number.toString() else "X",
-                    onClick = { onClick(number) },
-                    remainingUses = usesLeft,
-                    isKeyPressed = selectedKey == number,
+                    number = if (isEraser) "X" else key.toString(),
+                    onClick = { onClick(key) },
+                    keyCount = if (isEraser) 0  else count,
+                    isKeyPressed = selectedKey == key,
                     keySize = keySize
                 )
             }
@@ -66,7 +64,7 @@ fun KeyboardButton(
     modifier: Modifier = Modifier,
     number: String,
     onClick: () -> Unit,
-    remainingUses: Int,
+    keyCount: Int,
     isKeyPressed: Boolean,
     keySize: Float,
 ) {
@@ -110,10 +108,10 @@ fun KeyboardButton(
                 )
             )
 
-            if (remainingUses > 0) {
+            if (keyCount > 0) {
                 Text(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = remainingUses.toString(),
+                    text = keyCount.toString(),
                     fontSize = 8.sp,
                     color = textColor,
                     style = LocalTextStyle.current.copy(
@@ -128,16 +126,16 @@ fun KeyboardButton(
     }
 }
 
-@Preview
-@Composable
-fun GameKeyboardPreview() {
-    SudokuTheme {
-        Surface {
-            GameKeyboard(
-                remainingUse = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9),
-                onClick = {},
-                keySize = 40f
-            )
-        }
-    }
-}
+//@Preview
+//@Composable
+//fun GameKeyboardPreview() {
+//    SudokuTheme {
+//        Surface {
+//            GameKeyboard(
+//                onClick = {},
+//                keySize = 40f,
+//                boardUi = (0..10).toList()
+//            )
+//        }
+//    }
+//}
