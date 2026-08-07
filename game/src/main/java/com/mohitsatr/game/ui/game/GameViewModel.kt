@@ -19,6 +19,7 @@ import com.mohitsatr.domain.usecase.GetSavedGameUseCase
 import com.mohitsatr.domain.usecase.SaveGameUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.ilikeyourhat.kudoku.model.Cell
+import io.github.ilikeyourhat.kudoku.parsing.EmptyCellIndicator
 import io.github.ilikeyourhat.kudoku.rating.Difficulty
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -151,8 +152,16 @@ class GameViewModel @Inject constructor(
     }
 
     fun processInput(cell: Cell): Boolean {
-        val countLeft = _gameBoardUiState.value.remainingKeyUseCount[_gameBoardUiState.value.selectedKey - 1]
-        if (countLeft > 0 && cell.isEmpty()) {
+        val curKeyIndex = _gameBoardUiState.value.selectedKey - 1
+        val countLeft = _gameBoardUiState.value.remainingKeyUseCount[curKeyIndex]
+
+        if (curKeyIndex == _gameBoardUiState.value.gameSize && !cell.isLocked()) {
+            cell.clear()
+            _gameBoardUiState.update {
+                it.copy(selectedCell = cell)
+            }
+        }
+        else if (countLeft > 0 && !cell.isLocked()) {
             cell.set(_gameBoardUiState.value.selectedKey)
             _gameBoardUiState.update {
                 it.copy(selectedCell = cell)
@@ -179,10 +188,13 @@ class GameViewModel @Inject constructor(
         _gamePlayUiState.value = GamePlayUiState.GiveUp
     }
 
+    fun Cell.isLocked(): Boolean = _gameBoardUiState.value.displayBoard.lockedCells.contains(this)
+
     companion object {
         private const val TAG = "GameViewModel"
     }
 }
+
 
 @SuppressLint("DefaultLocale")
 fun Duration.toFormattedString(): String {
@@ -200,6 +212,8 @@ data class GameBoardState(
     val duration: Duration = Duration.ZERO,
 ) {
     val timeText: String get() = duration.toFormattedString()
+
+    val getAllCells: List<Cell> get() = displayBoard.allCells
 
     val remainingKeyUseCount: List<Int>
         get() = (0..gameSize).map { gameSize - displayBoard.countNumber(it + 1) }

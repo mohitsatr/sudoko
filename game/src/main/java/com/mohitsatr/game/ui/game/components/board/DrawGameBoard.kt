@@ -34,8 +34,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mohitsatr.domain.GameBoard
 import com.mohitsatr.domain.GameBoard.Companion.parseToGameBoard
+import com.mohitsatr.game.ui.game.GameBoardState
 import com.mohitsatr.ui.SudokuBoardColors.LightThemeSudokuColorsImpl
 import com.mohitsatr.ui.SudokuBoardColors.LocalBoardColors
 import com.mohitsatr.ui.SudokuBoardColors.SudokuColors
@@ -48,7 +48,7 @@ import kotlin.math.sqrt
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun DrawGameBoard(
-    board: GameBoard,
+    boardUi: GameBoardState,
     size: Int = 9,
     mainTextSize: TextUnit = when (size) {
         6 -> 32.sp
@@ -58,7 +58,7 @@ fun DrawGameBoard(
     },
     autoFontSize: Boolean = false,
     selectedCell: Cell,
-    onClick: (Cell) -> Unit,
+    onBoardCellClick: (Cell) -> Unit,
     enabled: Boolean = true,
     boardColors: SudokuColors = LocalBoardColors.current,
     maxWidth: Float,
@@ -77,7 +77,7 @@ fun DrawGameBoard(
 
     val boardModifier = Modifier
         .fillMaxSize()
-        .pointerInput(key1 = enabled, key2 = board) {
+        .pointerInput(key1 = enabled, key2 = boardUi.displayBoard) {
             detectTapGestures(
                 onTap = {
                     val totalOffset = it / zoom + offset
@@ -85,7 +85,8 @@ fun DrawGameBoard(
                         .coerceIn(0, size)
                     val column = floor((totalOffset.x) / cellSize).toInt()
                         .coerceIn(0, size)
-                    onClick(board.getCell(row, column))
+                    onBoardCellClick(boardUi.displayBoard.getCell(row, column))
+                    Log.d("DrawGameBoard", "${boardUi.displayBoard.getCell(row, column)}")
                 }
             )
         }
@@ -195,46 +196,42 @@ fun DrawGameBoard(
             }
         }
 
-        for (row in 0 until size) {
-            for (col in 0 until size) {
-                val cell = board.getCell(row, col)
-                if (cell.value != 0) {
-                    val isSelected =
-                        cell.x == selectedCell.x && cell.y == selectedCell.y
+        boardUi.getAllCells.forEach { cell->
+            val row = cell.x
+            val col = cell.y
+            if (!cell.isEmpty()) {
+                val isSelected = cell.x == selectedCell.x && cell.y == selectedCell.y
 
-                    val textStyle = TextStyle(
-                        color = if (isSelected) selectedCellNumberColor else nonSelectedCellNumberColor,
-                        fontSize = mainTextSize
-                    )
-                    val cellCenter = Offset(
-                        x = col * cellSize + cellSize / 2f,
-                        y = row * cellSize + cellSize / 2f
-                    )
+                val textStyle = TextStyle(
+                    color = if (isSelected) selectedCellNumberColor else nonSelectedCellNumberColor,
+                    fontSize = mainTextSize
+                )
+                val cellCenter = Offset(
+                    x = col * cellSize + cellSize / 2f,
+                    y = row * cellSize + cellSize / 2f
+                )
 
-                    val textLayoutResult = textMeasurer.measure(
-                        text = cell.value.toString(),
-                        style = textStyle
-                    )
+                val textLayoutResult = textMeasurer.measure(
+                    text = cell.value.toString(),
+                    style = textStyle
+                )
 
-                    val textX = col * cellSize + (cellSize - textLayoutResult.size.width) / 2f
-                    val textY = row * cellSize + (cellSize - textLayoutResult.size.height) / 2f
+                val textX = col * cellSize + (cellSize - textLayoutResult.size.width) / 2f
+                val textY = row * cellSize + (cellSize - textLayoutResult.size.height) / 2f
 
-                    drawCircle(
-                        color = if (isSelected) selectedCellBackgroundColor else nonSelectedCellBackgroundColor,
-                        radius = (cellSize / 2) * 0.80f,
-                        center = cellCenter
-                    )
-                    drawText(
-                        textLayoutResult = textLayoutResult,
-                        topLeft = Offset(textX, textY)
-                    )
-                }
+                drawCircle(
+                    color = if (isSelected) selectedCellBackgroundColor else nonSelectedCellBackgroundColor,
+                    radius = (cellSize / 2) * 0.80f,
+                    center = cellCenter
+                )
+                drawText(
+                    textLayoutResult = textLayoutResult,
+                    topLeft = Offset(textX, textY)
+                )
             }
         }
     }
-
 }
-
 
 fun DrawScope.SingleCell(
     textMeasurer: TextMeasurer,
@@ -323,10 +320,10 @@ fun GameBoardPreview() {
     val fakeBoardColors = LightThemeSudokuColorsImpl()
     SudokuTheme {
         DrawGameBoard(
-            board = fakeGameBoard,
+            boardUi = GameBoardState(),
             size = 9,
             selectedCell = Cell(4, 0, 8),
-            onClick = {},
+            onBoardCellClick = {},
             boardColors = fakeBoardColors,
             maxWidth = 200f,
         )

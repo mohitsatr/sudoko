@@ -18,9 +18,10 @@ data class GameBoard(
 ) {
 
     private val internalBoard: Board = Board(sizeX, sizeY, cells)
-//    private val internalCells: List<Cell> = cells.map { it.internalCell }
 
-    fun updateValue(x: Int, y: Int, value: Int) = internalBoard.get(x, y).set(value)
+    val allCells = internalBoard.cells()
+
+    val lockedCells = internalBoard.cells().filter { !it.isEmpty() }
 
     fun getCell(x: Int, y: Int): Cell = internalBoard.get(x, y)
 
@@ -29,6 +30,10 @@ data class GameBoard(
     }
 
     fun countNumber(number: Int) : Int = internalBoard.cells().count { it.value == number }
+
+    override fun toString(): String {
+        return internalBoard.toString()
+    }
 
     companion object {
         private const val TAG = "GameBoard"

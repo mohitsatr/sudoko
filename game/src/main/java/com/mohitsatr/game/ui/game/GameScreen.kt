@@ -205,10 +205,10 @@ fun GameScreenContent(
                     cellSize = maxWidth / boardSize.toFloat()
 
                     DrawGameBoard(
-                        board = boardUi.displayBoard,
+                        boardUi = boardUi,
                         maxWidth = maxWidth,
                         selectedCell = boardUi.selectedCell,
-                        onClick = onBoardCellClick,
+                        onBoardCellClick = onBoardCellClick,
                         enabled = true,
                     )
                 }
